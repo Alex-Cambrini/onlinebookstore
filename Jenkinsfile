@@ -21,7 +21,7 @@ pipeline {
         stage('Software Composition Analysis (SCA)') {
             steps {
                 echo 'Running OWASP Dependency-Check...'
-                dependencyCheck additionalArguments: '--format HTML --failOnCVSS 7 --out dependency-check-report'
+                dependencyCheck odcInstallation: 'Dependency-Check', additionalArguments: '--format HTML --failOnCVSS 7 --out dependency-check-report'
                 archiveArtifacts artifacts: 'dependency-check-report/dependency-check-report.html', fingerprint: true
             }
         }
