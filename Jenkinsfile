@@ -20,7 +20,7 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
-                sh "mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.host.url=http://localhost:9000 -Dsonar.login=${env.SONAR_TOKEN}"
+                sh "mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=${env.SONAR_TOKEN}"
             }
         }
     }
