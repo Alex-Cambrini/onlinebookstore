@@ -18,11 +18,11 @@ pipeline {
                 sh 'mvn clean verify'
             }
         }
-                stage('Software Composition Analysis (SCA)') { // NUOVO STAGE
+        stage('Software Composition Analysis (SCA)') {
             steps {
                 echo 'Running OWASP Dependency-Check...'
-                dependencyCheck additionalArguments: '--failOnCVSS 7', odcHtmlReport: 'reports/dependency-check-report.html'
-                archiveArtifacts artifacts: 'reports/dependency-check-report.html', fingerprint: true
+                dependencyCheck additionalArguments: '--failOnCVSS 7', htmlReport: true
+                archiveArtifacts artifacts: '**/dependency-check-report.html', fingerprint: true
             }
         }
         stage('SonarQube Analysis') {
