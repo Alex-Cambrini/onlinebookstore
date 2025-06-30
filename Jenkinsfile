@@ -1,6 +1,6 @@
 pipeline {
     agent any
-        tools {
+    tools {
         maven 'Maven 3.9.10'
         jdk 'JDK 8'
     }
@@ -21,8 +21,8 @@ pipeline {
         stage('Software Composition Analysis (SCA)') {
             steps {
                 echo 'Running OWASP Dependency-Check...'
-                dependencyCheck additionalArguments: '--failOnCVSS 7', htmlReport: true
-                archiveArtifacts artifacts: '**/dependency-check-report.html', fingerprint: true
+                dependencyCheck additionalArguments: '--format HTML --failOnCVSS 7 --out dependency-check-report'
+                archiveArtifacts artifacts: 'dependency-check-report/dependency-check-report.html', fingerprint: true
             }
         }
         stage('SonarQube Analysis') {
