@@ -88,9 +88,6 @@
   <configuration>
     <failOnViolation>false</failOnViolation>
     <linkXRef>false</linkXRef>
-    <rulesets>
-      <ruleset>category/java/basic.xml</ruleset>
-    </rulesets>
     <targetDirectory>${project.build.directory}/pmd</targetDirectory>
   </configuration>
   <executions>
