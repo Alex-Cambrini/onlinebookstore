@@ -3,6 +3,7 @@ pipeline {
     tools {
         maven 'Maven 3.9.10'
         jdk 'JDK 8'
+        nodejs 'NodeGlobal'
     }
     options {
         timeout(time: 60, unit: 'MINUTES')
@@ -50,6 +51,10 @@ pipeline {
                         ansiColor('xterm') {
                             script {
                                 echo 'Starting SonarQube analysis...'
+                                // Puoi aggiungere qui i comandi Node.js se il tuo progetto li richiede per SonarQube
+                                // Ad esempio, se hai un progetto JavaScript/TypeScript che usa ESLint o altre dipendenze Node.js
+                                // sh 'npm install' // Se necessario per l'analisi SonarQube di un frontend
+                                // sh 'npm run lint' // Esegui linting o altri script Node.js
                                 retry(2) {
                                     withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                                         withSonarQubeEnv('LocalSonarQube') {
