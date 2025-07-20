@@ -28,43 +28,34 @@ pipeline {
                 }
             }
         }
-        stage('Parallel Scans') {
-            parallel {
-                stage('SCA - OWASP Dependency-Check') {
-                    steps {
-                        ansiColor('xterm') {
-                            script {
-                                echo 'Starting OWASP Dependency-Check...'
-                                try {
-                                    dependencyCheck odcInstallation: 'Dependency-Check', additionalArguments: '--format HTML --failOnCVSS 7 --out dependency-check-report'
-                                    echo 'Dependency-Check completed successfully.'
-                                    archiveArtifacts artifacts: 'dependency-check-report/dependency-check-report.html', fingerprint: true
-                                } catch (err) {
-                                    echo "Dependency-Check failed: ${err}"
-                                }
-                            }
+        stage('SCA - OWASP Dependency-Check') {
+            steps {
+                ansiColor('xterm') {
+                    script {
+                        echo 'Starting OWASP Dependency-Check...'
+                        try {
+                            dependencyCheck odcInstallation: 'Dependency-Check', additionalArguments: '--format HTML --failOnCVSS 7 --out dependency-check-report'
+                            echo 'Dependency-Check completed successfully.'
+                            archiveArtifacts artifacts: 'dependency-check-report/dependency-check-report.html', fingerprint: true
+                        } catch (err) {
+                            echo "Dependency-Check failed: ${err}"
                         }
                     }
                 }
-                stage('SonarQube Analysis') {
-                    steps {
-                        ansiColor('xterm') {
-                            script {
-                                echo 'Starting SonarQube analysis...'
-                                // Puoi aggiungere qui i comandi Node.js se il tuo progetto li richiede per SonarQube
-                                // Ad esempio, se hai un progetto JavaScript/TypeScript che usa ESLint o altre dipendenze Node.js
-                                // sh 'npm install' // Se necessario per l'analisi SonarQube di un frontend
-                                // sh 'npm run lint' // Esegui linting o altri script Node.js
-                                retry(2) {
-                                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                                        withSonarQubeEnv('LocalSonarQube') {
-                                            sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
-                                        }
-                                    }
-                                }
-                                echo 'SonarQube analysis completed.'
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                ansiColor('xterm') {
+                    script {
+                        echo 'Starting SonarQube analysis...'                       
+                        retry(2) {
+                            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                                withSonarQubeEnv('LocalSonarQube') {
+                                    sh 'mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'                                }
                             }
                         }
+                        echo 'SonarQube analysis completed.'
                     }
                 }
             }
