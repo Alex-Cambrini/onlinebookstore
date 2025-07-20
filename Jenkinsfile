@@ -17,14 +17,14 @@ pipeline {
                 echo 'Checkout completed.'
             }
         }
-        stage('Build & Test') {
+        stage('Build, Test & PMD Analysis') {
             steps {
                 ansiColor('xterm') {
-                    echo 'Starting Build & Test stage...'
-                    timeout(time: 15, unit: 'MINUTES') {
-                        sh 'mvn clean verify'
+                    echo 'Starting Build, Test & PMD Analysis...'
+                    timeout(time: 20, unit: 'MINUTES') {
+                        sh 'mvn clean verify pmd:pmd'
                     }
-                    echo 'Build & Test stage completed.'
+                    echo 'Build, Test & PMD Analysis completed.'
                 }
             }
         }
@@ -48,11 +48,12 @@ pipeline {
             steps {
                 ansiColor('xterm') {
                     script {
-                        echo 'Starting SonarQube analysis...'                       
+                        echo 'Starting SonarQube analysis...'
                         retry(2) {
                             withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                                 withSonarQubeEnv('LocalSonarQube') {
-                                    sh 'mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'                                }
+                                    sh 'mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
+                                }
                             }
                         }
                         echo 'SonarQube analysis completed.'
@@ -86,6 +87,9 @@ pipeline {
         }
     }
     post {
+        always {
+            recordIssues tools: [pmd(pattern: 'target/pmd/pmd.xml')]
+        }
         success {
             withCredentials([string(credentialsId: 'BUILD_NOTIFICATION_EMAIL', variable: 'EMAIL')]) {
                 emailext (
