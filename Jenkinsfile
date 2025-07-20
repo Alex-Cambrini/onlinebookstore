@@ -13,11 +13,13 @@ pipeline {
                 checkout scm
             }
         }
+
         stage('Build & Test') {
             steps {
                 sh 'mvn clean verify'
             }
         }
+
         stage('Software Composition Analysis (SCA)') {
             steps {
                 echo 'Running OWASP Dependency-Check...'
@@ -25,9 +27,36 @@ pipeline {
                 archiveArtifacts artifacts: 'dependency-check-report/dependency-check-report.html', fingerprint: true
             }
         }
+
         stage('SonarQube Analysis') {
             steps {
-                sh "mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=${env.SONAR_TOKEN}"
+                withSonarQubeEnv('SonarQube') {
+                    sh "mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=${env.SONAR_TOKEN}"
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Archiviazione Artefatti') {
+            steps {
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            }
+        }
+
+        stage('Notifica') {
+            steps {
+                emailext (
+                    subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - ${currentBuild.currentResult}",
+                    body: "Controlla il report della build: ${env.BUILD_URL}",
+                    to: "tuo.email@unibo.it"
+                )
             }
         }
     }
