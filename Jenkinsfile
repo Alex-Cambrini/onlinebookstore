@@ -55,7 +55,7 @@ pipeline {
                 emailext (
                     subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - ${currentBuild.currentResult}",
                     body: "Controlla il report della build: ${env.BUILD_URL}",
-                    to: "tuo.email@unibo.it"
+                    to: "alex.cambrini@studio.unibo.it"
                 )
             }
         }
