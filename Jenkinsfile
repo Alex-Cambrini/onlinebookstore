@@ -91,7 +91,7 @@ pipeline {
                 emailext (
                     subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - SUCCESS",
                     body: "Build and tests succeeded. Check build details: ${env.BUILD_URL}",
-                    to: "$EMAIL"
+                    to: EMAIL
                 )
             }
         }
@@ -100,7 +100,7 @@ pipeline {
                 emailext (
                     subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - FAILURE",
                     body: "Build or tests failed. Check build details: ${env.BUILD_URL}",
-                    to: "$EMAIL"
+                    to: EMAIL
                 )
             }
         }
