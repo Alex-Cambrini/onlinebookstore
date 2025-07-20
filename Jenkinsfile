@@ -47,7 +47,7 @@ pipeline {
 
         stage('Archiviazione Artefatti') {
             steps {
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                archiveArtifacts artifacts: 'target/*.war', fingerprint: true
             }
         }
     }
