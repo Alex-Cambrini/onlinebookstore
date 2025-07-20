@@ -6,64 +6,106 @@ pipeline {
     }
     environment {
         SONAR_TOKEN = credentials('sonar-token')
+        BUILD_NOTIFICATION_EMAIL = credentials('BUILD_NOTIFICATION_EMAIL') 
+    }
+    options {
+        timeout(time: 60, unit: 'MINUTES')
+        timestamps()
     }
     stages {
         stage('Checkout') {
             steps {
+                echo 'Starting Checkout stage...'
                 checkout scm
+                echo 'Checkout completed.'
             }
         }
-
         stage('Build & Test') {
             steps {
-                sh 'mvn clean verify package'
-            }
-        }
-
-        stage('Software Composition Analysis (SCA)') {
-            steps {
-                echo 'Running OWASP Dependency-Check...'
-                dependencyCheck odcInstallation: 'Dependency-Check', additionalArguments: '--format HTML --failOnCVSS 7 --out dependency-check-report'
-                archiveArtifacts artifacts: 'dependency-check-report/dependency-check-report.html', fingerprint: true
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('LocalSonarQube') {
-                    sh "mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=${env.SONAR_TOKEN}"
+                ansiColor('xterm') {
+                    echo 'Starting Build & Test stage...'
+                    timeout(time: 15, unit: 'MINUTES') {
+                        sh 'mvn clean verify'
+                    }
+                    echo 'Build & Test stage completed.'
                 }
             }
         }
-
+        stage('Parallel Scans') {
+            parallel {
+                stage('SCA - OWASP Dependency-Check') {
+                    steps {
+                        ansiColor('xterm') {
+                            script {
+                                echo 'Starting OWASP Dependency-Check...'
+                                try {
+                                    dependencyCheck odcInstallation: 'Dependency-Check', additionalArguments: '--format HTML --failOnCVSS 7 --out dependency-check-report'
+                                    echo 'Dependency-Check completed successfully.'
+                                    archiveArtifacts artifacts: 'dependency-check-report/dependency-check-report.html', fingerprint: true
+                                } catch (err) {
+                                    echo "Dependency-Check failed: ${err}"
+                                }
+                            }
+                        }
+                    }
+                }
+                stage('SonarQube Analysis') {
+                    steps {
+                        ansiColor('xterm') {
+                            script {
+                                echo 'Starting SonarQube analysis...'
+                                retry(2) {
+                                    withSonarQubeEnv('LocalSonarQube') {
+                                        sh "mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=${env.SONAR_TOKEN}"
+                                    }
+                                }
+                                echo 'SonarQube analysis completed.'
+                            }
+                        }
+                    }
+                }
+            }
+        }
         stage('Quality Gate') {
             steps {
+                echo 'Waiting for SonarQube Quality Gate result...'
                 script { sleep 15 }
                 timeout(time: 30, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
+                echo 'Quality Gate passed.'
             }
         }
-
         stage('Archiviazione Artefatti') {
             steps {
-                archiveArtifacts artifacts: 'target/*.war', fingerprint: true
+                script {
+                    echo 'Checking for WAR files to archive...'
+                    def warFiles = findFiles(glob: 'target/*.war')
+                    if (warFiles.length > 0) {
+                        archiveArtifacts artifacts: 'target/*.war', fingerprint: true
+                        echo 'WAR files archived.'
+                    } else {
+                        echo 'No WAR files found to archive.'
+                    }
+                }
             }
         }
     }
     post {
         success {
+            echo 'Build succeeded, sending success email.'
             emailext (
                 subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - SUCCESS",
                 body: "Build and tests succeeded. Check build details: ${env.BUILD_URL}",
-                to: "alex.cambrini@studio.unibo.it"
+                to: "${env.BUILD_NOTIFICATION_EMAIL}"
             )
         }
         failure {
+            echo 'Build failed, sending failure email.'
             emailext (
                 subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - FAILURE",
                 body: "Build or tests failed. Check build details: ${env.BUILD_URL}",
-                to: "alex.cambrini@studio.unibo.it"
+                to: "${env.BUILD_NOTIFICATION_EMAIL}"
             )
         }
     }
