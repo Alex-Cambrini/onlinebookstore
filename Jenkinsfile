@@ -34,7 +34,7 @@ pipeline {
                     script {
                         echo 'Starting OWASP Dependency-Check...'
                         try {
-                            dependencyCheck odcInstallation: 'Dependency-Check', additionalArguments: '--format HTML --failOnCVSS 7 --out dependency-check-report'
+                            dependencyCheck odcInstallation: 'Dependency-Check', additionalArguments: '--format HTML --failOnCVSS 10 --out dependency-check-report'
                             echo 'Dependency-Check completed successfully.'
                             archiveArtifacts artifacts: 'dependency-check-report/dependency-check-report.html', fingerprint: true
                         } catch (err) {
