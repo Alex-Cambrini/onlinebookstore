@@ -4,10 +4,6 @@ pipeline {
         maven 'Maven 3.9.10'
         jdk 'JDK 8'
     }
-    environment {
-        SONAR_TOKEN = credentials('sonar-token')
-        BUILD_NOTIFICATION_EMAIL = credentials('BUILD_NOTIFICATION_EMAIL') 
-    }
     options {
         timeout(time: 60, unit: 'MINUTES')
         timestamps()
@@ -55,8 +51,10 @@ pipeline {
                             script {
                                 echo 'Starting SonarQube analysis...'
                                 retry(2) {
-                                    withSonarQubeEnv('LocalSonarQube') {
-                                        sh "mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=${env.SONAR_TOKEN}"
+                                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                                        withSonarQubeEnv('LocalSonarQube') {
+                                            sh 'mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN'
+                                        }
                                     }
                                 }
                                 echo 'SonarQube analysis completed.'
@@ -93,20 +91,22 @@ pipeline {
     }
     post {
         success {
-            echo 'Build succeeded, sending success email.'
-            emailext (
-                subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - SUCCESS",
-                body: "Build and tests succeeded. Check build details: ${env.BUILD_URL}",
-                to: "${env.BUILD_NOTIFICATION_EMAIL}"
-            )
+            withCredentials([string(credentialsId: 'BUILD_NOTIFICATION_EMAIL', variable: 'EMAIL')]) {
+                emailext (
+                    subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - SUCCESS",
+                    body: "Build and tests succeeded. Check build details: ${env.BUILD_URL}",
+                    to: "$EMAIL"
+                )
+            }
         }
         failure {
-            echo 'Build failed, sending failure email.'
-            emailext (
-                subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - FAILURE",
-                body: "Build or tests failed. Check build details: ${env.BUILD_URL}",
-                to: "${env.BUILD_NOTIFICATION_EMAIL}"
-            )
+            withCredentials([string(credentialsId: 'BUILD_NOTIFICATION_EMAIL', variable: 'EMAIL')]) {
+                emailext (
+                    subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - FAILURE",
+                    body: "Build or tests failed. Check build details: ${env.BUILD_URL}",
+                    to: "$EMAIL"
+                )
+            }
         }
     }
 }
