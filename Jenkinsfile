@@ -88,7 +88,7 @@ pipeline {
     }
     post {
         always {
-            recordIssues tools: [pmd(pattern: 'target/pmd/pmd.xml')]
+            recordIssues tools: [pmdParser(pattern: 'target/pmd/pmd.xml')]
         }
         success {
             withCredentials([string(credentialsId: 'BUILD_NOTIFICATION_EMAIL', variable: 'EMAIL')]) {
