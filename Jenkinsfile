@@ -38,6 +38,7 @@ pipeline {
 
         stage('Quality Gate') {
             steps {
+                script { sleep 15 }
                 timeout(time: 30, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
@@ -49,15 +50,21 @@ pipeline {
                 archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
-
-        stage('Notifica') {
-            steps {
-                emailext (
-                    subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - ${currentBuild.currentResult}",
-                    body: "Controlla il report della build: ${env.BUILD_URL}",
-                    to: "alex.cambrini@studio.unibo.it"
-                )
-            }
+    }
+    post {
+        success {
+            emailext (
+                subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - SUCCESS",
+                body: "Build and tests succeeded. Check build details: ${env.BUILD_URL}",
+                to: "alex.cambrini@studio.unibo.it"
+            )
+        }
+        failure {
+            emailext (
+                subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - FAILURE",
+                body: "Build or tests failed. Check build details: ${env.BUILD_URL}",
+                to: "alex.cambrini@studio.unibo.it"
+            )
         }
     }
 }
