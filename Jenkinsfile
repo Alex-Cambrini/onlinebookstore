@@ -53,7 +53,7 @@ pipeline {
                                 retry(2) {
                                     withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                                         withSonarQubeEnv('LocalSonarQube') {
-                                            sh 'mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN'
+                                            sh 'mvn clean verify sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
                                         }
                                     }
                                 }
