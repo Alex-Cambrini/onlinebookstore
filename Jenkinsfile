@@ -32,14 +32,10 @@ pipeline {
             steps {
                 ansiColor('xterm') {
                     script {
-                        echo 'Starting OWASP Dependency-Check...'
-                        try {
-                            dependencyCheck odcInstallation: 'Dependency-Check', additionalArguments: '--format HTML --failOnCVSS 10 --out dependency-check-report'
-                            echo 'Dependency-Check completed successfully.'
-                            archiveArtifacts artifacts: 'dependency-check-report/dependency-check-report.html', fingerprint: true
-                        } catch (err) {
-                            echo "Dependency-Check failed: ${err}"
-                        }
+                        echo 'Starting OWASP Dependency-Check...'    
+                        dependencyCheck odcInstallation: 'Dependency-Check', additionalArguments: '--format HTML --out dependency-check-report'
+                        echo 'OWASP Dependency-Check scan completed.'
+                        archiveArtifacts artifacts: 'dependency-check-report/dependency-check-report.html', fingerprint: true
                     }
                 }
             }
@@ -61,14 +57,22 @@ pipeline {
                 }
             }
         }
-        stage('Quality Gate') {
+        stage('Security Gates Evaluation') {
             steps {
+                echo 'Evaluating all security gates...'
                 echo 'Waiting for SonarQube Quality Gate result...'
                 script { sleep 15 }
                 timeout(time: 30, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
-                echo 'Quality Gate passed.'
+                echo 'SonarQube Quality Gate passed.'
+
+                echo 'Evaluating OWASP Dependency-Check Quality Gate...'
+                script {                
+                    dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml',
+                                            severityThreshold: 8.0
+                }
+                echo 'OWASP Dependency-Check Quality Gate passed.'
             }
         }
         stage('Archiviazione Artefatti') {
