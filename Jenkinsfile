@@ -59,20 +59,45 @@ pipeline {
         }
         stage('Security Gates Evaluation') {
             steps {
-                echo 'Evaluating all security gates...'
-                echo 'Waiting for SonarQube Quality Gate result...'
-                script { sleep 15 }
-                timeout(time: 30, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-                echo 'SonarQube Quality Gate passed.'
+                script {
+                    def sonarQGStatus
+                    def owaspQGStatus = 'PASSED'
+                    echo 'Evaluating all security gates...'
 
-                echo 'Evaluating OWASP Dependency-Check Quality Gate...'
-                script {                
-                    dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml',
-                                            severityThreshold: 8.0
+                    // --- Valutazione SonarQube ---
+                    echo 'Waiting for SonarQube Quality Gate result...'
+                    script { sleep 15 }
+                    timeout(time: 30, unit: 'MINUTES') {
+                        def qg = waitForQualityGate()
+                        sonarQGStatus = qg.status
+                    }
+                    if (sonarQGStatus == 'OK') {
+                        echo 'SonarQube Quality Gate passed.'
+                    } else {
+                        echo "SonarQube Quality Gate failed with status: ${sonarQGStatus}."
+                    }
+
+                    // --- Valutazione OWASP Dependency-Check ---
+                    echo 'Evaluating OWASP Dependency-Check Quality Gate...'
+                    try {
+                        dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml',
+                                                severityThreshold: 8.0
+                        echo 'OWASP Dependency-Check Quality Gate passed.'
+                    } catch (Exception e) {
+                        echo "OWASP Dependency-Check Quality Gate failed: ${e.message}"
+                        owaspQGStatus = 'FAILED'
+                    }
+
+                    // --- Decisione finale della Pipeline ---
+                    echo '--- Final Security Gate Decision ---'
+                    if (sonarQGStatus != 'OK' || owaspQGStatus == 'FAILED') {
+                        echo 'One or more security quality gates failed. Aborting pipeline.'
+                        currentBuild.result = 'FAILURE'
+                        error 'Security Quality Gates Failed!'
+                    } else {
+                        echo 'All security quality gates passed. Pipeline can proceed.'
+                    }
                 }
-                echo 'OWASP Dependency-Check Quality Gate passed.'
             }
         }
         stage('Archiviazione Artefatti') {
