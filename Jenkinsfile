@@ -10,11 +10,16 @@ pipeline {
         timestamps()
     }
     stages {
-        stage('Checkout') {
+        stage('Cleanup & Checkout SCM') {
             steps {
-                echo 'Starting Checkout stage...'
+                script {
+                    cleanWs()
+                    
+                }
+                echo 'Starting SCM Checkout...'
                 checkout scm
-                echo 'Checkout completed.'
+                echo 'SCM Checkout completed.'
+                sh 'mkdir -p dependency-check-report'
             }
         }
         stage('Build, Test & PMD Analysis') {
