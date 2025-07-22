@@ -3,6 +3,8 @@ package servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -20,8 +22,10 @@ import com.bittercode.util.StoreUtil;
 public class BuyBooksServlet extends HttpServlet {
     private static final String INTERNAL_SERVER_ERROR_MSG = "Internal Server Error";
     private static final String TD_CLOSE = "</td>";
+    private static final Logger logger = Logger.getLogger(BuyBooksServlet.class.getName());
 
-    BookService bookService = new BookServiceImpl();
+    private static final BookService bookService = new BookServiceImpl();
+
 
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
@@ -32,12 +36,10 @@ public class BuyBooksServlet extends HttpServlet {
                 handleLoginRequired(req, res, pw);
                 return;
             }
-            try {
-                processBooks(pw, req, res);
-            } catch (ServletException | IOException e) {
-                sendInternalServerError(res);
-            }
+            processBooksSafe(pw, req, res);
+
         } catch (IOException e) {
+            logger.log(Level.SEVERE, e, () -> "Failed to get writer from response: " + e.getMessage());
             sendInternalServerError(res);
         }
     }
@@ -45,11 +47,28 @@ public class BuyBooksServlet extends HttpServlet {
     private void handleLoginRequired(HttpServletRequest req, HttpServletResponse res, PrintWriter pw) throws IOException {
         try {
             includePage(req, res, "CustomerLogin.html");
-        } catch (ServletException | IOException e) {
+        } catch (ServletException e) {
+            logger.log(Level.SEVERE, e, () -> "ServletException while including CustomerLogin.html: " + e.getMessage());
+            sendInternalServerError(res);
+            return;
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, e, () -> "IOException while including CustomerLogin.html: " + e.getMessage());
             sendInternalServerError(res);
             return;
         }
         pw.println("<table class=\"tab\"><tr><td>Please Login First to Continue!!" + TD_CLOSE + "</td></tr></table>");
+    }
+
+    private void processBooksSafe(PrintWriter pw, HttpServletRequest req, HttpServletResponse res) throws IOException {
+        try {
+            processBooks(pw, req, res);
+        } catch (ServletException e) {
+            logger.log(Level.SEVERE, e, () -> "ServletException during book processing: " + e.getMessage());
+            sendInternalServerError(res);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, e, () -> "IOException during book processing: " + e.getMessage());
+            sendInternalServerError(res);
+        }
     }
 
     private void processBooks(PrintWriter pw, HttpServletRequest req, HttpServletResponse res)
@@ -60,30 +79,30 @@ public class BuyBooksServlet extends HttpServlet {
         pw.println("<div class=\"tab hd brown \">Books Available In Our Store</div>");
         pw.println("<div class=\"tab\"><form action=\"buys\" method=\"post\">");
         pw.println("<table>\r\n" +
-                "			<tr>\r\n" +
-                "				<th>Books</th>\r\n" +
-                "				<th>Code</th>\r\n" +
-                "				<th>Name</th>\r\n" +
-                "				<th>Author</th>\r\n" +
-                "				<th>Price</th>\r\n" +
-                "				<th>Avail</th>\r\n" +
-                "				<th>Qty</th>\r\n" +
-                "			</tr>");
+                "           <tr>\r\n" +
+                "               <th>Books</th>\r\n" +
+                "               <th>Code</th>\r\n" +
+                "               <th>Name</th>\r\n" +
+                "               <th>Author</th>\r\n" +
+                "               <th>Price</th>\r\n" +
+                "               <th>Avail</th>\r\n" +
+                "               <th>Qty</th>\r\n" +
+                "           </tr>");
         int i = 0;
         for (Book book : books) {
             i++;
             String n = "checked" + i;
             String q = "qty" + i;
             pw.println("<tr>\r\n" +
-                    "				<td>\r\n" +
-                    "					<input type=\"checkbox\" name=\"" + n + "\" value=\"pay\">\r\n" +
-                    "				</td>");
-            pw.println("<td>" + book.getBarcode() + "</td>");
-            pw.println("<td>" + book.getName() + "</td>");
-            pw.println("<td>" + book.getAuthor() + "</td>");
-            pw.println("<td>" + book.getPrice() + "</td>");
-            pw.println("<td>" + book.getQuantity() + "</td>");
-            pw.println("<td><input type=\"text\" name=\"" + q + "\" value=\"0\" style=\"text-align:center\"></td></tr>");
+                    "               <td>\r\n" +
+                    "                   <input type=\"checkbox\" name=\"" + n + "\" value=\"pay\">\r\n" +
+                    "               " + TD_CLOSE);
+            pw.println("<td>" + book.getBarcode() + TD_CLOSE);
+            pw.println("<td>" + book.getName() + TD_CLOSE);
+            pw.println("<td>" + book.getAuthor() + TD_CLOSE);
+            pw.println("<td>" + book.getPrice() + TD_CLOSE);
+            pw.println("<td>" + book.getQuantity() + TD_CLOSE);
+            pw.println("<td><input type=\"text\" name=\"" + q + "\" value=\"0\" style=\"text-align:center\">" + TD_CLOSE + "</tr>");
         }
         pw.println("</table>\r\n" +
                 "<input type=\"submit\" value=\" PAY NOW \"><br/>" +
@@ -101,7 +120,7 @@ public class BuyBooksServlet extends HttpServlet {
         try {
             res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR_MSG);
         } catch (IOException e) {
-            System.err.println("Failed to send error response: " + e.getMessage());
+            logger.log(Level.SEVERE, e, () -> "Failed to send error response: " + e.getMessage());
         }
     }
 }
