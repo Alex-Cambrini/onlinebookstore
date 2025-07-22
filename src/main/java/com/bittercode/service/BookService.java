@@ -7,18 +7,17 @@ import com.bittercode.model.StoreException;
 
 public interface BookService {
 
-    public Book getBookById(String bookId) throws StoreException;
+    Book getBookById(String bookId) throws StoreException;
 
-    public List<Book> getAllBooks() throws StoreException;
+    List<Book> getAllBooks() throws StoreException;
 
-    public List<Book> getBooksByCommaSeperatedBookIds(String commaSeperatedBookIds) throws StoreException;
+    List<Book> getBooksByCommaSeperatedBookIds(String commaSeperatedBookIds) throws StoreException;
 
-    public String deleteBookById(String bookId) throws StoreException;
+    String deleteBookById(String bookId) throws StoreException;
 
-    public String addBook(Book book) throws StoreException;
+    String addBook(Book book) throws StoreException;
 
-    public String updateBookQtyById(String bookId, int quantity) throws StoreException;
-    
-    public String updateBook(Book book) throws StoreException;
+    String updateBookQtyById(String bookId, int quantity) throws StoreException;
 
+    String updateBook(Book book) throws StoreException;
 }
