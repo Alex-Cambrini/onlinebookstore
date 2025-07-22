@@ -77,7 +77,7 @@ public class CartServlet extends HttpServlet {
                 int qty = (int) session.getAttribute("qty_" + book.getBarcode());
                 Cart cart = new Cart(book, qty);
                 cartItems.add(cart);
-                amountToPay += (qty * book.getPrice());
+                amountToPay += qty * book.getPrice();
                 pw.println(getRowData(cart));
             }
 
