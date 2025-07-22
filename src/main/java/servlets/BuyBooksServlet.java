@@ -18,18 +18,30 @@ import com.bittercode.service.impl.BookServiceImpl;
 import com.bittercode.util.StoreUtil;
 
 public class BuyBooksServlet extends HttpServlet {
+    private static final String TD_CLOSE = "</td>";
     BookService bookService = new BookServiceImpl();
 
     @Override
-    public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
+    public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
         res.setContentType(BookStoreConstants.CONTENT_TYPE_TEXT_HTML);
         try (PrintWriter pw = res.getWriter()) {
             if (!StoreUtil.isLoggedIn(UserRole.CUSTOMER, req.getSession())) {
-                includePage(req, res, "CustomerLogin.html");
-                pw.println("<table class=\"tab\"><tr><td>Please Login First to Continue!!</td></tr></table>");
+                try {
+                    includePage(req, res, "CustomerLogin.html");
+                } catch (ServletException | IOException e) {
+                    res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+                    return;
+                }
+                pw.println("<table class=\"tab\"><tr><td>Please Login First to Continue!!" + TD_CLOSE + "</td></tr></table>");
                 return;
             }
-            processBooks(pw, req, res);
+            try {
+                processBooks(pw, req, res);
+            } catch (ServletException | IOException e) {
+                res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+            }
+        } catch (IOException e) {
+            res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
         }
     }
 
@@ -59,11 +71,11 @@ public class BuyBooksServlet extends HttpServlet {
                     "				<td>\r\n" +
                     "					<input type=\"checkbox\" name=\"" + n + "\" value=\"pay\">\r\n" +
                     "				</td>");
-            pw.println("<td>" + book.getBarcode() + "</td>");
-            pw.println("<td>" + book.getName() + "</td>");
-            pw.println("<td>" + book.getAuthor() + "</td>");
-            pw.println("<td>" + book.getPrice() + "</td>");
-            pw.println("<td>" + book.getQuantity() + "</td>");
+            pw.println("<td>" + book.getBarcode() + TD_CLOSE);
+            pw.println("<td>" + book.getName() + TD_CLOSE);
+            pw.println("<td>" + book.getAuthor() + TD_CLOSE);
+            pw.println("<td>" + book.getPrice() + TD_CLOSE);
+            pw.println("<td>" + book.getQuantity() + TD_CLOSE);
             pw.println("<td><input type=\"text\" name=\"" + q + "\" value=\"0\" style=\"text-align:center\"></td></tr>");
         }
         pw.println("</table>\r\n" +
