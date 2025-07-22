@@ -3,6 +3,7 @@ package servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -18,9 +19,10 @@ import com.bittercode.service.impl.BookServiceImpl;
 import com.bittercode.util.StoreUtil;
 
 public class ReceiptServlet extends HttpServlet {
+    private static final Logger logger = Logger.getLogger(ReceiptServlet.class.getName());
     BookService bookService = new BookServiceImpl();
 
-    //NOT_IN_USED
+    // NOT_IN_USED
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         PrintWriter pw = res.getWriter();
         res.setContentType(BookStoreConstants.CONTENT_TYPE_TEXT_HTML);
@@ -77,10 +79,11 @@ public class ReceiptServlet extends HttpServlet {
                         bookService.updateBookQtyById(bCode, bQty);
                     }
                 } catch (Exception e) {
+                    logger.severe("Error processing book: " + bCode + " - " + e.getMessage());
                 }
             }
             pw.println("</table><br/><div class='tab'>Total Paid Amount: " + total + "</div>");
-//            String fPay = req.getParameter("f_pay");
+            // String fPay = req.getParameter("f_pay");
         } catch (Exception e) {
             e.printStackTrace();
         }
