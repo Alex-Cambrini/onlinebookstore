@@ -18,28 +18,30 @@ import com.bittercode.service.impl.UserServiceImpl;
 
 public class SellerLoginServlet extends HttpServlet {
 
-    UserService userService = new UserServiceImpl();
+    private static final UserService userService = new UserServiceImpl();
 
+    @Override
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
-        PrintWriter pw = res.getWriter();
         res.setContentType(BookStoreConstants.CONTENT_TYPE_TEXT_HTML);
-        String uName = req.getParameter(UsersDBConstants.COLUMN_USERNAME);
-        String pWord = req.getParameter(UsersDBConstants.COLUMN_PASSWORD);
+
         try {
+            PrintWriter pw = res.getWriter();
+            String uName = req.getParameter(UsersDBConstants.COLUMN_USERNAME);
+            String pWord = req.getParameter(UsersDBConstants.COLUMN_PASSWORD);
+
             User user = userService.login(UserRole.SELLER, uName, pWord, req.getSession());
+
             if (user != null) {
                 RequestDispatcher rd = req.getRequestDispatcher("SellerHome.html");
-
                 rd.include(req, res);
                 pw.println("    <div id=\"topmid\"><h1>Welcome to Online <br>Book Store</h1></div>\r\n"
                         + "    <br>\r\n"
                         + "    <table class=\"tab\">\r\n"
                         + "        <tr>\r\n"
-                        + "            <td><p>Welcome "+user.getFirstName()+", Happy Learning !!</p></td>\r\n"
+                        + "            <td><p>Welcome " + user.getFirstName() + ", Happy Learning !!</p></td>\r\n"
                         + "        </tr>\r\n"
                         + "    </table>");
             } else {
-
                 RequestDispatcher rd = req.getRequestDispatcher("SellerLogin.html");
                 rd.include(req, res);
                 pw.println("<div class=\"tab\">Incorrect UserName or PassWord</div>");
