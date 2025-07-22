@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.bittercode.constant.ResponseCode;
 import com.bittercode.constant.db.BooksDBConstants;
@@ -16,6 +17,7 @@ import com.bittercode.util.DBUtil;
 
 public class BookServiceImpl implements BookService {
 
+    private static final Logger logger = Logger.getLogger(BookServiceImpl.class.getName());
     private static final String getAllBooksQuery = "SELECT * FROM " + BooksDBConstants.TABLE_BOOK;
     private static final String getBookByIdQuery = "SELECT * FROM " + BooksDBConstants.TABLE_BOOK
             + " WHERE " + BooksDBConstants.COLUMN_BARCODE + " = ?";
@@ -52,11 +54,10 @@ public class BookServiceImpl implements BookService {
                 String bAuthor = rs.getString(3);
                 int bPrice = rs.getInt(4);
                 int bQty = rs.getInt(5);
-
                 book = new Book(bCode, bName, bAuthor, bPrice, bQty);
             }
         } catch (SQLException e) {
-
+            logger.severe("Error in getBookById: " + e.getMessage());
         }
         return book;
     }
@@ -81,7 +82,7 @@ public class BookServiceImpl implements BookService {
                 books.add(book);
             }
         } catch (SQLException e) {
-
+            logger.severe("Error in getAllBooks: " + e.getMessage());
         }
         return books;
     }
@@ -165,7 +166,7 @@ public class BookServiceImpl implements BookService {
                 books.add(book);
             }
         } catch (SQLException e) {
-
+            logger.severe("Error in getBooksByCommaSeperatedBookIds: " + e.getMessage());
         }
         return books;
     }
