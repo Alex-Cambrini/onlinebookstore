@@ -2,6 +2,8 @@ package servlets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -18,6 +20,7 @@ import com.bittercode.service.impl.UserServiceImpl;
 
 public class CustomerLoginServlet extends HttpServlet {
 
+    private static final Logger LOGGER = Logger.getLogger(CustomerLoginServlet.class.getName());
     private static UserService authService = new UserServiceImpl();
 
     @Override
@@ -47,7 +50,7 @@ public class CustomerLoginServlet extends HttpServlet {
                 pw.println("<table class=\"tab\"><tr><td>Incorrect UserName or PassWord</td></tr></table>");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error during customer login process", e);
         }
     }
 }
