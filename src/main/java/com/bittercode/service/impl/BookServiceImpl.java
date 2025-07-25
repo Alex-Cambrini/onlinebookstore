@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -142,23 +143,33 @@ public class BookServiceImpl implements BookService {
     @Override
     public List<Book> getBooksByCommaSeperatedBookIds(String commaSeperatedBookIds) throws StoreException {
         List<Book> books = new ArrayList<>();
+        String[] ids = commaSeperatedBookIds.split(",");
+        String placeholders = String.join(",", Collections.nCopies(ids.length, "?"));
         String query = SELECT_ALL_FROM + BooksDBConstants.TABLE_BOOK
-                + WHERE_CLAUSE + BooksDBConstants.COLUMN_BARCODE + " IN (" + commaSeperatedBookIds + ")";
+                + WHERE_CLAUSE + BooksDBConstants.COLUMN_BARCODE + " IN (" + placeholders + ")";
+
         try (Connection con = DBUtil.getConnection();
-                PreparedStatement ps = con.prepareStatement(query);
-                ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                books.add(new Book(
-                        rs.getString(1),
-                        rs.getString(2),
-                        rs.getString(3),
-                        rs.getInt(4),
-                        rs.getInt(5)));
+                PreparedStatement ps = con.prepareStatement(query)) {
+
+            for (int i = 0; i < ids.length; i++) {
+                ps.setString(i + 1, ids[i].trim().replace("'", ""));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    books.add(new Book(
+                            rs.getString(1),
+                            rs.getString(2),
+                            rs.getString(3),
+                            rs.getInt(4),
+                            rs.getInt(5)));
+                }
             }
         } catch (SQLException e) {
             LOGGER.severe("Error in getBooksByCommaSeperatedBookIds: " + e.getMessage());
             throw new StoreException(ResponseCode.DATABASE_CONNECTION_FAILURE);
         }
+
         return books;
     }
 
