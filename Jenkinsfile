@@ -128,21 +128,39 @@ pipeline {
             recordIssues tools: [pmdParser(pattern: 'target/pmd/pmd.xml')]
         }
         success {
-            withCredentials([string(credentialsId: 'BUILD_NOTIFICATION_EMAIL', variable: 'EMAIL')]) {
+            withCredentials([
+                string(credentialsId: 'BUILD_NOTIFICATION_EMAIL', variable: 'EMAIL'),
+                string(credentialsId: 'TELEGRAM_TOKEN', variable: 'TOKEN'),
+                string(credentialsId: 'TELEGRAM_CHAT_ID', variable: 'CHAT_ID')
+            ]) {
                 emailext (
                     subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - SUCCESS",
                     body: "Build and tests succeeded. Check build details: ${env.BUILD_URL}",
                     to: EMAIL
                 )
+                sh """
+                    curl -s -X POST https://api.telegram.org/bot$TOKEN/sendMessage \
+                        -d chat_id=$CHAT_ID \
+                        -d text="✅ Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.BUILD_URL}"
+                """
             }
         }
         failure {
-            withCredentials([string(credentialsId: 'BUILD_NOTIFICATION_EMAIL', variable: 'EMAIL')]) {
+            withCredentials([
+                string(credentialsId: 'BUILD_NOTIFICATION_EMAIL', variable: 'EMAIL'),
+                string(credentialsId: 'TELEGRAM_TOKEN', variable: 'TOKEN'),
+                string(credentialsId: 'TELEGRAM_CHAT_ID', variable: 'CHAT_ID')
+            ]) {
                 emailext (
                     subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - FAILURE",
                     body: "Build or tests failed. Check build details: ${env.BUILD_URL}",
                     to: EMAIL
                 )
+                sh """
+                    curl -s -X POST https://api.telegram.org/bot$TOKEN/sendMessage \
+                        -d chat_id=$CHAT_ID \
+                        -d text="❌ Build FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.BUILD_URL}"
+                """
             }
         }
     }
