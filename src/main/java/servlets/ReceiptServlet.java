@@ -19,10 +19,10 @@ import com.bittercode.service.impl.BookServiceImpl;
 import com.bittercode.util.StoreUtil;
 
 public class ReceiptServlet extends HttpServlet {
-    private static final Logger logger = Logger.getLogger(ReceiptServlet.class.getName());
-    BookService bookService = new BookServiceImpl();
+    final BookService bookService = new BookServiceImpl();
+    private static final Logger LOGGER = Logger.getLogger(ReceiptServlet.class.getName());
 
-    // NOT_IN_USED
+    @Override
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         PrintWriter pw = res.getWriter();
         res.setContentType(BookStoreConstants.CONTENT_TYPE_TEXT_HTML);
@@ -75,15 +75,14 @@ public class ReceiptServlet extends HttpServlet {
                         total = total + amount;
                         pw.println("<td>" + amount + "</td></tr>");
                         bQty = bQty - quantity;
-                        System.out.println(bQty);
+                        LOGGER.info(String.valueOf(bQty));
                         bookService.updateBookQtyById(bCode, bQty);
                     }
                 } catch (Exception e) {
-                    logger.severe("Error processing book: " + bCode + " - " + e.getMessage());
+                    LOGGER.severe("Error processing book: " + bCode + " - " + e.getMessage());
                 }
             }
             pw.println("</table><br/><div class='tab'>Total Paid Amount: " + total + "</div>");
-            // String fPay = req.getParameter("f_pay");
         } catch (Exception e) {
             e.printStackTrace();
         }

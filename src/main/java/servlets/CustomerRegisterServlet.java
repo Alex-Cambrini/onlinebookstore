@@ -2,6 +2,7 @@ package servlets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -19,8 +20,10 @@ import com.bittercode.service.impl.UserServiceImpl;
 
 public class CustomerRegisterServlet extends HttpServlet {
 
-    UserService userService = new UserServiceImpl();
+    private static final Logger LOGGER = Logger.getLogger(CustomerRegisterServlet.class.getName());
+    final UserService userService = new UserServiceImpl();
 
+    @Override
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         PrintWriter pw = res.getWriter();
         res.setContentType(BookStoreConstants.CONTENT_TYPE_TEXT_HTML);
@@ -40,7 +43,9 @@ public class CustomerRegisterServlet extends HttpServlet {
         user.setAddress(addr);
         try {
             String respCode = userService.register(UserRole.CUSTOMER, user);
-            System.out.println(respCode);
+            if (respCode != null) {
+                LOGGER.info(respCode);
+            }
             if (ResponseCode.SUCCESS.name().equalsIgnoreCase(respCode)) {
                 RequestDispatcher rd = req.getRequestDispatcher("CustomerLogin.html");
                 rd.include(req, res);

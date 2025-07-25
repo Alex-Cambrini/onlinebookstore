@@ -21,8 +21,10 @@ import com.bittercode.util.StoreUtil;
 
 public class ProcessPaymentServlet extends HttpServlet {
 
-    BookService bookService = new BookServiceImpl();
+    final BookService bookService = new BookServiceImpl();
+    private static final String CART_ITEMS_KEY = "cartItems";
 
+    @Override
     @SuppressWarnings("unchecked")
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         PrintWriter pw = res.getWriter();
@@ -43,8 +45,8 @@ public class ProcessPaymentServlet extends HttpServlet {
                     + "        <div class=\"card-columns\">");
             HttpSession session = req.getSession();
             List<Cart> cartItems = null;
-            if (session.getAttribute("cartItems") != null)
-                cartItems = (List<Cart>) session.getAttribute("cartItems");
+            if (session.getAttribute(CART_ITEMS_KEY) != null)
+                cartItems = (List<Cart>) session.getAttribute(CART_ITEMS_KEY);
             for (Cart cart : cartItems) {
                 Book book = cart.getBook();
                 double bPrice = book.getPrice();
@@ -55,11 +57,11 @@ public class ProcessPaymentServlet extends HttpServlet {
                 int qtToBuy = cart.getQuantity();
                 availableQty = availableQty - qtToBuy;
                 bookService.updateBookQtyById(bCode, availableQty);
-                pw.println(this.addBookToCard(bCode, bName, bAuthor, bPrice, availableQty));
+                pw.println(this.addBookToCard(bCode, bName, bAuthor, bPrice));
                 session.removeAttribute("qty_" + bCode);
             }
             session.removeAttribute("amountToPay");
-            session.removeAttribute("cartItems");
+            session.removeAttribute(CART_ITEMS_KEY);
             session.removeAttribute("items");
             session.removeAttribute("selectedBookId");
             pw.println("</div>\r\n"
@@ -69,7 +71,7 @@ public class ProcessPaymentServlet extends HttpServlet {
         }
     }
 
-    public String addBookToCard(String bCode, String bName, String bAuthor, double bPrice, int bQty) {
+    public String addBookToCard(String bCode, String bName, String bAuthor, double bPrice) {
         String button = "<a href=\"#\" class=\"btn btn-info\">Order Placed</a>\r\n";
         return "<div class=\"card\">\r\n"
                 + "                <div class=\"row card-body\">\r\n"
