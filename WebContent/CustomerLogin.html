@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="ISO-8859-1">
 <title>Book Store</title>
@@ -99,36 +100,42 @@ input {
 	</div>
 
 	<form action="userlog" method="post" onsubmit="checkform()"
-		id="theform">
-		<table class="tab" style="width: 40%">
-			<tr style="color: brown; padding-left: 35%">
-				<td>Customer LOGIN</td>
-			</tr>
-			<tr>
-				<td><a href="SellerLogin.html"
-					style="color: blue; font-size: medium;">Are you Seller?, Click
-						Here to Login as Admin</a></td>
-			</tr>
-			<tr>
-				<td><label for="userName">Username : </label> <input
-					type="text" name="username" id="userName"
-					placeholder="Enter your Username"><br /> <br /> <label
-					for="Password">Password : </label> <input type="password"
-					name="password" placeholder="Enter Password" id="Password"><br />
-					<br />
+		id="theform">	
+        <table class="tab" style="width: 40%">
+        <thead>
+            <tr>
+            <th style="color: brown; padding-left: 35%;">Customer LOGIN</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+            <td>
+                <a href="SellerLogin.html" style="color: blue; font-size: medium;">
+                Are you Seller?, Click Here to Login as Admin
+                </a>
+            </td>
+            </tr>
+            <tr>
+            <td>
+                <label for="userName">Username : </label>
+                <input type="text" name="username" id="userName" placeholder="Enter your Username"><br /><br />
 
-					<div class="capbox">
-						<div id="CaptchaDiv">46749</div>
-						<div class="capbox-inner">
-							<input type="hidden" id="txtCaptcha" value="46749"> <input
-								type="text" name="CaptchaInput" id="CaptchaInput" size="15"
-								placeholder="Enter Captcha"><br>
-						</div>
-					</div> <br />
-				<br /> <input class="btn btn-success" type="submit"
-					value=" Login as an User  "></td>
-			</tr>
-		</table>
+                <label for="Password">Password : </label>
+                <input type="password" name="password" placeholder="Enter Password" id="Password"><br /><br />
+
+                <div class="capbox">
+                <div id="CaptchaDiv">46749</div>
+                <div class="capbox-inner">
+                    <input type="hidden" id="txtCaptcha" value="46749">
+                    <input type="text" name="CaptchaInput" id="CaptchaInput" size="15" placeholder="Enter Captcha"><br>
+                </div>
+                </div><br /><br />
+
+                <input class="btn btn-success" type="submit" value=" Login as an User ">
+            </td>
+            </tr>
+        </tbody>
+        </table>
 	</form>
 
 
@@ -158,7 +165,7 @@ input {
 				why += "- Please Enter CAPTCHA Code.\n";
 			}
 			if (theform.CaptchaInput.value != "") {
-				if (ValidCaptcha(theform.CaptchaInput.value) == false) {
+				if (!ValidCaptcha()) {
 					why += "- The CAPTCHA Code Does Not Match.\n";
 				}
 			}
@@ -181,15 +188,9 @@ input {
 		document.getElementById("CaptchaDiv").innerHTML = code;
 
 		// Validate input against the generated number
-		function ValidCaptcha() {
-			var str1 = removeSpaces(document.getElementById('txtCaptcha').value);
-			var str2 = removeSpaces(document.getElementById('CaptchaInput').value);
-			if (str1 == str2) {
-				return true;
-			} else {
-				return false;
-			}
-		}
+        function ValidCaptcha() {
+            return removeSpaces(document.getElementById('txtCaptcha').value) === removeSpaces(document.getElementById('CaptchaInput').value);
+        }
 
 		// Remove the spaces from the entered and generated code
 		function removeSpaces(string) {
