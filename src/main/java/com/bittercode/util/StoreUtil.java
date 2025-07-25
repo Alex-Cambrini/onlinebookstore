@@ -1,82 +1,80 @@
 package com.bittercode.util;
 
 import java.io.PrintWriter;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
 import com.bittercode.model.UserRole;
 
-/*
- * Store UTil File To Store Commonly used methods
- */
 public class StoreUtil {
+    private StoreUtil() {
+        // Utility class, prevent instantiation
+    }
 
-    /**
-     * Check if the User is logged in with the requested role
-     */
+    private static final String ITEMS_KEY = "items";
+
     public static boolean isLoggedIn(UserRole role, HttpSession session) {
-
         return session.getAttribute(role.toString()) != null;
     }
 
-    /**
-     * Modify the active tab in the page menu bar
-     */
     public static void setActiveTab(PrintWriter pw, String activeTab) {
-
         pw.println("<script>document.getElementById(activeTab).classList.remove(\"active\");activeTab=" + activeTab
                 + "</script>");
         pw.println("<script>document.getElementById('" + activeTab + "').classList.add(\"active\");</script>");
-
     }
 
-    /**
-     * Add/Remove/Update Item in the cart using the session
-     */
     public static void updateCartItems(HttpServletRequest req) {
         String selectedBookId = req.getParameter("selectedBookId");
+        if (selectedBookId == null)
+            return;
+
         HttpSession session = req.getSession();
-        if (selectedBookId != null) { // add item to the cart
+        String items = (String) session.getAttribute(ITEMS_KEY);
+        boolean addToCart = req.getParameter("addToCart") != null;
 
-            // Items will contain comma separated bookIds that needs to be added in the cart
-            String items = (String) session.getAttribute("items");
-            if (req.getParameter("addToCart") != null) { // add to cart
-                if (items == null || items.length() == 0)
-                    items = selectedBookId;
-                else if (!items.contains(selectedBookId))
-                    items = items + "," + selectedBookId; // if items already contains bookId, don't add it
+        int itemQty = getItemQuantity(session, selectedBookId);
 
-                // set the items in the session to be used later
-                session.setAttribute("items", items);
-
-                /*
-                 * Quantity of each item in the cart will be stored in the session as:
-                 * Prefixed with qty_ following its bookId
-                 * For example 2 no. of book with id 'myBook' in the cart will be
-                 * added to the session as qty_myBook=2
-                 */
-                int itemQty = 0;
-                if (session.getAttribute("qty_" + selectedBookId) != null)
-                    itemQty = (int) session.getAttribute("qty_" + selectedBookId);
-                itemQty += 1;
+        if (addToCart) {
+            if (items == null || items.isEmpty()) {
+                items = selectedBookId;
+            } else if (!items.contains(selectedBookId)) {
+                items += "," + selectedBookId;
+            }
+            itemQty++;
+            session.setAttribute(ITEMS_KEY, items);
+            session.setAttribute("qty_" + selectedBookId, itemQty);
+        } else {
+            if (itemQty > 1) {
+                itemQty--;
                 session.setAttribute("qty_" + selectedBookId, itemQty);
-            } else { // remove from the cart
-                int itemQty = 0;
-                if (session.getAttribute("qty_" + selectedBookId) != null)
-                    itemQty = (int) session.getAttribute("qty_" + selectedBookId);
-                if (itemQty > 1) {
-                    itemQty--;
-                    session.setAttribute("qty_" + selectedBookId, itemQty);
-                } else {
-                    session.removeAttribute("qty_" + selectedBookId);
-                    items = items.replace(selectedBookId + ",", "");
-                    items = items.replace("," + selectedBookId, "");
-                    items = items.replace(selectedBookId, "");
-                    session.setAttribute("items", items);
-                }
+            } else {
+                session.removeAttribute("qty_" + selectedBookId);
+                items = removeItemFromItemsString(items, selectedBookId);
+                session.setAttribute(ITEMS_KEY, items);
             }
         }
+    }
 
+    private static int getItemQuantity(HttpSession session, String bookId) {
+        Object qtyObj = session.getAttribute("qty_" + bookId);
+        if (qtyObj instanceof Integer) {
+            return (Integer) qtyObj;
+        }
+        return 0;
+    }
+
+    private static String removeItemFromItemsString(String items, String bookId) {
+        if (items == null || items.isEmpty())
+            return "";
+
+        String[] parts = items.split(",");
+        StringBuilder sb = new StringBuilder();
+        for (String part : parts) {
+            if (!part.equals(bookId)) {
+                if (sb.length() > 0)
+                    sb.append(",");
+                sb.append(part);
+            }
+        }
+        return sb.toString();
     }
 }
