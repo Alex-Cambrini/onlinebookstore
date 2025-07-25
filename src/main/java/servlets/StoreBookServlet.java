@@ -19,8 +19,9 @@ import com.bittercode.util.StoreUtil;
 public class StoreBookServlet extends HttpServlet {
 
     // book service for database operations and logics
-    BookService bookService = new BookServiceImpl();
+    final BookService bookService = new BookServiceImpl();
 
+    @Override
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         PrintWriter pw = res.getWriter();
         res.setContentType("text/html");
@@ -33,11 +34,6 @@ public class StoreBookServlet extends HttpServlet {
             return;
         }
         try {
-
-            // Add/Remove Item from the cart if requested
-            // store the comma separated bookIds of cart in the session
-            // StoreUtil.updateCartItems(req);
-
             RequestDispatcher rd = req.getRequestDispatcher("SellerHome.html");
             rd.include(req, res);
             pw.println("<div class='container'>");
@@ -59,7 +55,7 @@ public class StoreBookServlet extends HttpServlet {
                     + "    </tr>\r\n"
                     + "  </thead>\r\n"
                     + "  <tbody>\r\n");
-            if (books == null || books.size() == 0) {
+            if (books == null || books.isEmpty()) {
                 pw.println("    <tr style='background-color:green'>\r\n"
                         + "      <th scope=\"row\" colspan='6' style='color:yellow; text-align:center;'> No Books Available in the store </th>\r\n"
                         + "    </tr>\r\n");

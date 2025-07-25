@@ -3,6 +3,8 @@ package servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -16,7 +18,9 @@ import com.bittercode.model.UserRole;
 import com.bittercode.util.StoreUtil;
 
 public class ErrorHandlerServlet extends HttpServlet {
+    private static final Logger logger = Logger.getLogger(ErrorHandlerServlet.class.getName());
 
+    @Override
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         PrintWriter pw = res.getWriter();
         res.setContentType("text/html");
@@ -37,23 +41,17 @@ public class ErrorHandlerServlet extends HttpServlet {
             errorCode = errorCodes.get().name();
         }
 
-        if (throwable != null && throwable instanceof StoreException) {
+        if (throwable instanceof StoreException) {
             StoreException storeException = (StoreException) throwable;
-            if (storeException != null) {
-                errorMessage = storeException.getMessage();
-                statusCode = storeException.getStatusCode();
-                errorCode = storeException.getErrorCode();
-                storeException.printStackTrace();
-            }
+            errorMessage = storeException.getMessage();
+            statusCode = storeException.getStatusCode();
+            errorCode = storeException.getErrorCode();
+            storeException.printStackTrace();
         }
 
-        System.out.println("======ERROR TRIGGERED========");
-        System.out.println("Servlet Name: " + servletName);
-        System.out.println("Request URI: " + requestUri);
-        System.out.println("Status Code: " + statusCode);
-        System.out.println("Error Code: " + errorCode);
-        System.out.println("Error Message: " + errorMessage);
-        System.out.println("=============================");
+        logger.log(Level.SEVERE,
+                "======ERROR TRIGGERED========\nServlet Name: {0}\nRequest URI: {1}\nStatus Code: {2}\nError Code: {3}\nError Message: {4}\n=============================",
+                new Object[] { servletName, requestUri, statusCode, errorCode, errorMessage });
 
         if (StoreUtil.isLoggedIn(UserRole.CUSTOMER, req.getSession())) {
             RequestDispatcher rd = req.getRequestDispatcher("CustomerHome.html");

@@ -6,9 +6,17 @@ import java.util.Properties;
 
 class DatabaseConfig {
 
-    static Properties prop = new Properties();
-    static {
+    private static final Properties prop = new Properties();
 
+    public static final String DRIVER_NAME;
+    public static final String DB_HOST;
+    public static final String DB_PORT;
+    public static final String DB_NAME;
+    public static final String DB_USER_NAME;
+    public static final String DB_PASSWORD;
+    public static final String CONNECTION_STRING;
+
+    static {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         InputStream input = classLoader.getResourceAsStream("application.properties");
 
@@ -17,14 +25,17 @@ class DatabaseConfig {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        DRIVER_NAME = prop.getProperty("db.driver");
+        DB_HOST = prop.getProperty("db.host");
+        DB_PORT = prop.getProperty("db.port");
+        DB_NAME = prop.getProperty("db.name");
+        DB_USER_NAME = prop.getProperty("db.username");
+        DB_PASSWORD = prop.getProperty("db.password");
+        CONNECTION_STRING = DB_HOST + ":" + DB_PORT + "/" + DB_NAME;
     }
 
-    public final static String DRIVER_NAME = prop.getProperty("db.driver");
-    public final static String DB_HOST = prop.getProperty("db.host");
-    public final static String DB_PORT = prop.getProperty("db.port");
-    public final static String DB_NAME = prop.getProperty("db.name");
-    public final static String DB_USER_NAME = prop.getProperty("db.username");
-    public final static String DB_PASSWORD = prop.getProperty("db.password");
-    public final static String CONNECTION_STRING = DB_HOST + ":" + DB_PORT + "/" + DB_NAME;
-
+    private DatabaseConfig() {
+        // prevent instantiation
+    }
 }
