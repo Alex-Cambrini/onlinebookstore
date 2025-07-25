@@ -3,6 +3,7 @@ package servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
@@ -19,72 +20,98 @@ import com.bittercode.service.impl.BookServiceImpl;
 import com.bittercode.util.StoreUtil;
 
 public class ReceiptServlet extends HttpServlet {
-    final BookService bookService = new BookServiceImpl();
+    private final BookService bookService = new BookServiceImpl();
     private static final Logger LOGGER = Logger.getLogger(ReceiptServlet.class.getName());
 
     @Override
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         PrintWriter pw = res.getWriter();
         res.setContentType(BookStoreConstants.CONTENT_TYPE_TEXT_HTML);
+
         if (!StoreUtil.isLoggedIn(UserRole.CUSTOMER, req.getSession())) {
             RequestDispatcher rd = req.getRequestDispatcher("CustomerLogin.html");
             rd.include(req, res);
             pw.println("<table class=\"tab\"><tr><td>Please Login First to Continue!!</td></tr></table>");
             return;
         }
+
         try {
             List<Book> books = bookService.getAllBooks();
             int i = 0;
             RequestDispatcher rd = req.getRequestDispatcher("CustomerHome.html");
             rd.include(req, res);
             StoreUtil.setActiveTab(pw, "cart");
+
             pw.println("<div class=\"tab\">Your order status is as below</div>");
             pw.println(
-                    "<div class=\"tab\">\r\n" + "		<table>\r\n" + "			<tr>\r\n" + "				\r\n"
-                            + "				<th>Book Code</th>\r\n" + "				<th>Book Name</th>\r\n"
-                            + "				<th>Book Author</th>\r\n" + "				<th>Book Price</th>\r\n"
-                            + "				<th>Quantity</th><br/>\r\n" + "				<th>Amount</th><br/>\r\n"
-                            + "			</tr>");
+                    "<div class=\"tab\">\r\n" +
+                            "    <table>\r\n" +
+                            "        <tr>\r\n" +
+                            "            <th>Book Code</th>\r\n" +
+                            "            <th>Book Name</th>\r\n" +
+                            "            <th>Book Author</th>\r\n" +
+                            "            <th>Book Price</th>\r\n" +
+                            "            <th>Quantity</th>\r\n" +
+                            "            <th>Amount</th>\r\n" +
+                            "        </tr>");
+
             double total = 0.0;
             for (Book book : books) {
-                double bPrice = book.getPrice();
-                String bCode = book.getBarcode();
-                String bName = book.getName();
-                String bAuthor = book.getAuthor();
-                int bQty = book.getQuantity();
-                i = i + 1;
-
-                String qt = "qty" + Integer.toString(i);
-                int quantity = Integer.parseInt(req.getParameter(qt));
-                try {
-                    String check1 = "checked" + Integer.toString(i);
-                    String getChecked = req.getParameter(check1);
-                    if (bQty < quantity) {
-                        pw.println(
-                                "</table><div class=\"tab\" style='color:red;'>Please Select the Qty less than Available Books Quantity</div>");
-                        break;
-                    }
-
-                    if (getChecked.equals("pay")) {
-                        pw.println("<tr><td>" + bCode + "</td>");
-                        pw.println("<td>" + bName + "</td>");
-                        pw.println("<td>" + bAuthor + "</td>");
-                        pw.println("<td>" + bPrice + "</td>");
-                        pw.println("<td>" + quantity + "</td>");
-                        double amount = bPrice * quantity;
-                        total = total + amount;
-                        pw.println("<td>" + amount + "</td></tr>");
-                        bQty = bQty - quantity;
-                        LOGGER.info(String.valueOf(bQty));
-                        bookService.updateBookQtyById(bCode, bQty);
-                    }
-                } catch (Exception e) {
-                    LOGGER.severe("Error processing book: " + bCode + " - " + e.getMessage());
+                i++;
+                int quantity = parseQuantity(req, i);
+                double amount = processBook(req, pw, book, quantity, i);
+                if (amount > 0) {
+                    total += amount;
                 }
             }
+
             pw.println("</table><br/><div class='tab'>Total Paid Amount: " + total + "</div>");
         } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error in ReceiptServlet service: {0}", e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private double processBook(HttpServletRequest req, PrintWriter pw, Book book, int quantity, int index) {
+        try {
+            String checkParam = "checked" + index;
+            String getChecked = req.getParameter(checkParam);
+
+            if (book.getQuantity() < quantity) {
+                pw.println(
+                        "</table><div class=\"tab\" style='color:red;'>Please Select the Qty less than Available Books Quantity</div>");
+                return -1;
+            }
+
+            if ("pay".equals(getChecked)) {
+                pw.println("<tr><td>" + book.getBarcode() + "</td>");
+                pw.println("<td>" + book.getName() + "</td>");
+                pw.println("<td>" + book.getAuthor() + "</td>");
+                pw.println("<td>" + book.getPrice() + "</td>");
+                pw.println("<td>" + quantity + "</td>");
+                double amount = book.getPrice() * quantity;
+                pw.println("<td>" + amount + "</td></tr>");
+
+                int updatedQty = book.getQuantity() - quantity;
+                LOGGER.log(Level.INFO, "Updated quantity for book {0}: {1}",
+                        new Object[] { book.getBarcode(), updatedQty });
+                bookService.updateBookQtyById(book.getBarcode(), updatedQty);
+
+                return amount;
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error processing book: {0} - {1}",
+                    new Object[] { book.getBarcode(), e.getMessage() });
+        }
+        return 0;
+    }
+
+    private int parseQuantity(HttpServletRequest req, int index) {
+        String param = "qty" + index;
+        try {
+            return Integer.parseInt(req.getParameter(param));
+        } catch (NumberFormatException e) {
+            return 0;
         }
     }
 }
