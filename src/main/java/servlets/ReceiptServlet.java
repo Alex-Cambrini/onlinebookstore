@@ -22,6 +22,7 @@ import com.bittercode.util.StoreUtil;
 public class ReceiptServlet extends HttpServlet {
     private final BookService bookService = new BookServiceImpl();
     private static final Logger LOGGER = Logger.getLogger(ReceiptServlet.class.getName());
+    private static final String TD_CLOSE = "</td>";
 
     @Override
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
@@ -84,11 +85,11 @@ public class ReceiptServlet extends HttpServlet {
             }
 
             if ("pay".equals(getChecked)) {
-                pw.println("<tr><td>" + book.getBarcode() + "</td>");
-                pw.println("<td>" + book.getName() + "</td>");
-                pw.println("<td>" + book.getAuthor() + "</td>");
-                pw.println("<td>" + book.getPrice() + "</td>");
-                pw.println("<td>" + quantity + "</td>");
+                pw.println("<tr><td>" + book.getBarcode() + TD_CLOSE);
+                pw.println("<td>" + book.getName() + TD_CLOSE);
+                pw.println("<td>" + book.getAuthor() + TD_CLOSE);
+                pw.println("<td>" + book.getPrice() + TD_CLOSE);
+                pw.println("<td>" + quantity + TD_CLOSE);
                 double amount = book.getPrice() * quantity;
                 pw.println("<td>" + amount + "</td></tr>");
 
