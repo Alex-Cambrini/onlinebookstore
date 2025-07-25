@@ -17,72 +17,68 @@ import com.bittercode.util.DBUtil;
 
 public class BookServiceImpl implements BookService {
 
-    private static final Logger logger = Logger.getLogger(BookServiceImpl.class.getName());
-    private static final String getAllBooksQuery = "SELECT * FROM " + BooksDBConstants.TABLE_BOOK;
-    private static final String getBookByIdQuery = "SELECT * FROM " + BooksDBConstants.TABLE_BOOK
-            + " WHERE " + BooksDBConstants.COLUMN_BARCODE + " = ?";
+    private static final String SELECT_ALL_FROM = "SELECT * FROM ";
+    private static final String WHERE_CLAUSE = " WHERE ";
+    private static final Logger LOGGER = Logger.getLogger(BookServiceImpl.class.getName());
+    private static final String GET_ALL_BOOKS_QUERY = SELECT_ALL_FROM + BooksDBConstants.TABLE_BOOK;
+    private static final String GET_BOOK_BY_ID_QUERY = SELECT_ALL_FROM + BooksDBConstants.TABLE_BOOK
+            + WHERE_CLAUSE + BooksDBConstants.COLUMN_BARCODE + " = ?";
 
-    private static final String deleteBookByIdQuery = "DELETE FROM " + BooksDBConstants.TABLE_BOOK + "  WHERE "
+    private static final String DELETE_BOOK_BY_ID_QUERY = "DELETE FROM " + BooksDBConstants.TABLE_BOOK + WHERE_CLAUSE
             + BooksDBConstants.COLUMN_BARCODE + "=?";
 
-    private static final String addBookQuery = "INSERT INTO " + BooksDBConstants.TABLE_BOOK + "  VALUES(?,?,?,?,?)";
+    private static final String ADD_BOOK_QUERY = "INSERT INTO " + BooksDBConstants.TABLE_BOOK + " VALUES(?,?,?,?,?)";
 
-    private static final String updateBookQtyByIdQuery = "UPDATE " + BooksDBConstants.TABLE_BOOK + " SET "
-            + BooksDBConstants.COLUMN_QUANTITY + "=? WHERE " + BooksDBConstants.COLUMN_BARCODE
-            + "=?";
+    private static final String UPDATE_BOOK_QTY_BY_ID_QUERY = "UPDATE " + BooksDBConstants.TABLE_BOOK + " SET "
+            + BooksDBConstants.COLUMN_QUANTITY + "=? WHERE " + BooksDBConstants.COLUMN_BARCODE + "=?";
 
-    private static final String updateBookByIdQuery = "UPDATE " + BooksDBConstants.TABLE_BOOK + " SET "
-            + BooksDBConstants.COLUMN_NAME + "=? , "
+    private static final String UPDATE_BOOK_BY_ID_QUERY = "UPDATE " + BooksDBConstants.TABLE_BOOK + " SET "
+            + BooksDBConstants.COLUMN_NAME + "=?, "
             + BooksDBConstants.COLUMN_AUTHOR + "=?, "
             + BooksDBConstants.COLUMN_PRICE + "=?, "
             + BooksDBConstants.COLUMN_QUANTITY + "=? "
-            + "  WHERE " + BooksDBConstants.COLUMN_BARCODE
-            + "=?";
+            + " WHERE " + BooksDBConstants.COLUMN_BARCODE + "=?";
 
     @Override
     public Book getBookById(String bookId) throws StoreException {
         Book book = null;
-        Connection con = DBUtil.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement(getBookByIdQuery);
+        try (Connection con = DBUtil.getConnection();
+                PreparedStatement ps = con.prepareStatement(GET_BOOK_BY_ID_QUERY)) {
             ps.setString(1, bookId);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                String bCode = rs.getString(1);
-                String bName = rs.getString(2);
-                String bAuthor = rs.getString(3);
-                int bPrice = rs.getInt(4);
-                int bQty = rs.getInt(5);
-                book = new Book(bCode, bName, bAuthor, bPrice, bQty);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    book = new Book(
+                            rs.getString(1),
+                            rs.getString(2),
+                            rs.getString(3),
+                            rs.getInt(4),
+                            rs.getInt(5));
+                }
             }
         } catch (SQLException e) {
-            logger.severe("Error in getBookById: " + e.getMessage());
+            LOGGER.severe("Error in getBookById: " + e.getMessage());
+            throw new StoreException(ResponseCode.DATABASE_CONNECTION_FAILURE);
         }
         return book;
     }
 
     @Override
     public List<Book> getAllBooks() throws StoreException {
-        List<Book> books = new ArrayList<Book>();
-        Connection con = DBUtil.getConnection();
-
-        try {
-            PreparedStatement ps = con.prepareStatement(getAllBooksQuery);
-            ResultSet rs = ps.executeQuery();
-
+        List<Book> books = new ArrayList<>();
+        try (Connection con = DBUtil.getConnection();
+                PreparedStatement ps = con.prepareStatement(GET_ALL_BOOKS_QUERY);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                String bCode = rs.getString(1);
-                String bName = rs.getString(2);
-                String bAuthor = rs.getString(3);
-                int bPrice = rs.getInt(4);
-                int bQty = rs.getInt(5);
-
-                Book book = new Book(bCode, bName, bAuthor, bPrice, bQty);
-                books.add(book);
+                books.add(new Book(
+                        rs.getString(1),
+                        rs.getString(2),
+                        rs.getString(3),
+                        rs.getInt(4),
+                        rs.getInt(5)));
             }
         } catch (SQLException e) {
-            logger.severe("Error in getAllBooks: " + e.getMessage());
+            LOGGER.severe("Error in getAllBooks: " + e.getMessage());
+            throw new StoreException(ResponseCode.DATABASE_CONNECTION_FAILURE);
         }
         return books;
     }
@@ -90,17 +86,16 @@ public class BookServiceImpl implements BookService {
     @Override
     public String deleteBookById(String bookId) throws StoreException {
         String response = ResponseCode.FAILURE.name();
-        Connection con = DBUtil.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement(deleteBookByIdQuery);
+        try (Connection con = DBUtil.getConnection();
+                PreparedStatement ps = con.prepareStatement(DELETE_BOOK_BY_ID_QUERY)) {
             ps.setString(1, bookId);
             int k = ps.executeUpdate();
             if (k == 1) {
                 response = ResponseCode.SUCCESS.name();
             }
-        } catch (Exception e) {
-            response += " : " + e.getMessage();
-            e.printStackTrace();
+        } catch (SQLException e) {
+            LOGGER.severe("Error in deleteBookById: " + e.getMessage());
+            throw new StoreException(ResponseCode.DATABASE_CONNECTION_FAILURE);
         }
         return response;
     }
@@ -108,9 +103,8 @@ public class BookServiceImpl implements BookService {
     @Override
     public String addBook(Book book) throws StoreException {
         String responseCode = ResponseCode.FAILURE.name();
-        Connection con = DBUtil.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement(addBookQuery);
+        try (Connection con = DBUtil.getConnection();
+                PreparedStatement ps = con.prepareStatement(ADD_BOOK_QUERY)) {
             ps.setString(1, book.getBarcode());
             ps.setString(2, book.getName());
             ps.setString(3, book.getAuthor());
@@ -120,9 +114,9 @@ public class BookServiceImpl implements BookService {
             if (k == 1) {
                 responseCode = ResponseCode.SUCCESS.name();
             }
-        } catch (Exception e) {
-            responseCode += " : " + e.getMessage();
-            e.printStackTrace();
+        } catch (SQLException e) {
+            LOGGER.severe("Error in addBook: " + e.getMessage());
+            throw new StoreException(ResponseCode.DATABASE_CONNECTION_FAILURE);
         }
         return responseCode;
     }
@@ -130,43 +124,40 @@ public class BookServiceImpl implements BookService {
     @Override
     public String updateBookQtyById(String bookId, int quantity) throws StoreException {
         String responseCode = ResponseCode.FAILURE.name();
-        Connection con = DBUtil.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement(updateBookQtyByIdQuery);
+        try (Connection con = DBUtil.getConnection();
+                PreparedStatement ps = con.prepareStatement(UPDATE_BOOK_QTY_BY_ID_QUERY)) {
             ps.setInt(1, quantity);
             ps.setString(2, bookId);
-            ps.executeUpdate();
-            responseCode = ResponseCode.SUCCESS.name();
-        } catch (Exception e) {
-            responseCode += " : " + e.getMessage();
-            e.printStackTrace();
+            int k = ps.executeUpdate();
+            if (k == 1) {
+                responseCode = ResponseCode.SUCCESS.name();
+            }
+        } catch (SQLException e) {
+            LOGGER.severe("Error in updateBookQtyById: " + e.getMessage());
+            throw new StoreException(ResponseCode.DATABASE_CONNECTION_FAILURE);
         }
         return responseCode;
     }
 
     @Override
     public List<Book> getBooksByCommaSeperatedBookIds(String commaSeperatedBookIds) throws StoreException {
-        List<Book> books = new ArrayList<Book>();
-        Connection con = DBUtil.getConnection();
-        try {
-            String getBooksByCommaSeperatedBookIdsQuery = "SELECT * FROM " + BooksDBConstants.TABLE_BOOK
-                    + " WHERE " +
-                    BooksDBConstants.COLUMN_BARCODE + " IN ( " + commaSeperatedBookIds + " )";
-            PreparedStatement ps = con.prepareStatement(getBooksByCommaSeperatedBookIdsQuery);
-            ResultSet rs = ps.executeQuery();
-
+        List<Book> books = new ArrayList<>();
+        String query = SELECT_ALL_FROM + BooksDBConstants.TABLE_BOOK
+                + WHERE_CLAUSE + BooksDBConstants.COLUMN_BARCODE + " IN (" + commaSeperatedBookIds + ")";
+        try (Connection con = DBUtil.getConnection();
+                PreparedStatement ps = con.prepareStatement(query);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                String bCode = rs.getString(1);
-                String bName = rs.getString(2);
-                String bAuthor = rs.getString(3);
-                int bPrice = rs.getInt(4);
-                int bQty = rs.getInt(5);
-
-                Book book = new Book(bCode, bName, bAuthor, bPrice, bQty);
-                books.add(book);
+                books.add(new Book(
+                        rs.getString(1),
+                        rs.getString(2),
+                        rs.getString(3),
+                        rs.getInt(4),
+                        rs.getInt(5)));
             }
         } catch (SQLException e) {
-            logger.severe("Error in getBooksByCommaSeperatedBookIds: " + e.getMessage());
+            LOGGER.severe("Error in getBooksByCommaSeperatedBookIds: " + e.getMessage());
+            throw new StoreException(ResponseCode.DATABASE_CONNECTION_FAILURE);
         }
         return books;
     }
@@ -174,21 +165,21 @@ public class BookServiceImpl implements BookService {
     @Override
     public String updateBook(Book book) throws StoreException {
         String responseCode = ResponseCode.FAILURE.name();
-        Connection con = DBUtil.getConnection();
-        try {
-            PreparedStatement ps = con.prepareStatement(updateBookByIdQuery);
+        try (Connection con = DBUtil.getConnection();
+                PreparedStatement ps = con.prepareStatement(UPDATE_BOOK_BY_ID_QUERY)) {
             ps.setString(1, book.getName());
             ps.setString(2, book.getAuthor());
             ps.setDouble(3, book.getPrice());
             ps.setInt(4, book.getQuantity());
             ps.setString(5, book.getBarcode());
-            ps.executeUpdate();
-            responseCode = ResponseCode.SUCCESS.name();
-        } catch (Exception e) {
-            responseCode += " : " + e.getMessage();
-            e.printStackTrace();
+            int k = ps.executeUpdate();
+            if (k == 1) {
+                responseCode = ResponseCode.SUCCESS.name();
+            }
+        } catch (SQLException e) {
+            LOGGER.severe("Error in updateBook: " + e.getMessage());
+            throw new StoreException(ResponseCode.DATABASE_CONNECTION_FAILURE);
         }
         return responseCode;
     }
-
 }
