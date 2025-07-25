@@ -19,8 +19,9 @@ import com.bittercode.service.impl.BookServiceImpl;
 import com.bittercode.util.StoreUtil;
 
 public class AddBookServlet extends HttpServlet {
-    BookService bookService = new BookServiceImpl();
+    static BookService bookService = new BookServiceImpl();
 
+    @Override
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         PrintWriter pw = res.getWriter();
         res.setContentType(BookStoreConstants.CONTENT_TYPE_TEXT_HTML);
@@ -37,19 +38,31 @@ public class AddBookServlet extends HttpServlet {
         rd.include(req, res);
         StoreUtil.setActiveTab(pw, "addbook");
         pw.println("<div class='container my-2'>");
-        if(bName == null || bName.isBlank()) {
-            //render the add book form;
+
+        if (bName == null || bName.trim().isEmpty()) {
             showAddBookForm(pw);
             return;
-        } //else process the add book
-        
- 
+        }
+
+        String priceStr = req.getParameter(BooksDBConstants.COLUMN_PRICE);
+        String qtyStr = req.getParameter(BooksDBConstants.COLUMN_QUANTITY);
+        if (priceStr == null || !priceStr.matches("\\d+(\\.\\d+)?")) {
+            pw.println("<table class=\"tab\"><tr><td>Invalid price format!</td></tr></table>");
+            showAddBookForm(pw);
+            return;
+        }
+        if (qtyStr == null || !qtyStr.matches("\\d+")) {
+            pw.println("<table class=\"tab\"><tr><td>Invalid quantity format!</td></tr></table>");
+            showAddBookForm(pw);
+            return;
+        }
+
         try {
             String uniqueID = UUID.randomUUID().toString();
             String bCode = uniqueID;
             String bAuthor = req.getParameter(BooksDBConstants.COLUMN_AUTHOR);
-            double bPrice = Integer.parseInt(req.getParameter(BooksDBConstants.COLUMN_PRICE));
-            int bQty = Integer.parseInt(req.getParameter(BooksDBConstants.COLUMN_QUANTITY));
+            double bPrice = Double.parseDouble(priceStr);
+            int bQty = Integer.parseInt(qtyStr);
 
             Book book = new Book(bCode, bName, bAuthor, bPrice, bQty);
             String message = bookService.addBook(book);
@@ -57,15 +70,14 @@ public class AddBookServlet extends HttpServlet {
                 pw.println(
                         "<table class=\"tab\"><tr><td>Book Detail Updated Successfully!<br/>Add More Books</td></tr></table>");
             } else {
-                pw.println("<table class=\"tab\"><tr><td>Failed to Add Books! Fill up CareFully</td></tr></table>");
-                //rd.include(req, res);
+                pw.println("<table class=\"tab\"><tr><td>Failed to Add Books! Fill up Carefully</td></tr></table>");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            pw.println("<table class=\"tab\"><tr><td>Failed to Add Books! Fill up CareFully</td></tr></table>");
+            pw.println("<table class=\"tab\"><tr><td>Failed to Add Books! Fill up Carefully</td></tr></table>");
         }
     }
-    
+
     private static void showAddBookForm(PrintWriter pw) {
         String form = "<table class=\"tab my-5\" style=\"width:40%;\">\r\n"
                 + "        <tr>\r\n"
