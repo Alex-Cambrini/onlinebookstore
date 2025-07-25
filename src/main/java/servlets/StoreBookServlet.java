@@ -3,6 +3,8 @@ package servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -18,7 +20,7 @@ import com.bittercode.util.StoreUtil;
 
 public class StoreBookServlet extends HttpServlet {
 
-    // book service for database operations and logics
+    private static final Logger LOGGER = Logger.getLogger(StoreBookServlet.class.getName());
     final BookService bookService = new BookServiceImpl();
 
     @Override
@@ -68,7 +70,7 @@ public class StoreBookServlet extends HttpServlet {
                     + "</table></div>");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error while displaying seller book list", e);
         }
     }
 

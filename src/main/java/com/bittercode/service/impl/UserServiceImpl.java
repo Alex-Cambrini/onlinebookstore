@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.http.HttpSession;
 
@@ -17,6 +19,7 @@ import com.bittercode.util.DBUtil;
 
 public class UserServiceImpl implements UserService {
 
+    private static final Logger LOGGER = Logger.getLogger(UserServiceImpl.class.getName());
     private static final String REGISTER_USER_QUERY = "INSERT INTO " + UsersDBConstants.TABLE_USERS
             + " (username, password, firstname, lastname, address, phone, mailid, usertype) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -45,7 +48,7 @@ public class UserServiceImpl implements UserService {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Database error occurred", e);
         }
         return user;
     }
@@ -87,7 +90,7 @@ public class UserServiceImpl implements UserService {
             responseMessage += " : " + e.getMessage();
             if (responseMessage.contains("Duplicate"))
                 responseMessage = "User already registered with this email !!";
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Exception caught", e);
         }
         return responseMessage;
     }

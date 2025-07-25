@@ -3,6 +3,8 @@ package servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -21,6 +23,7 @@ import com.bittercode.util.StoreUtil;
 
 public class ProcessPaymentServlet extends HttpServlet {
 
+    private static final Logger LOGGER = Logger.getLogger(ProcessPaymentServlet.class.getName());
     final BookService bookService = new BookServiceImpl();
     private static final String CART_ITEMS_KEY = "cartItems";
 
@@ -67,7 +70,7 @@ public class ProcessPaymentServlet extends HttpServlet {
             pw.println("</div>\r\n"
                     + "    </div>");
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error processing order/cart", e);
         }
     }
 

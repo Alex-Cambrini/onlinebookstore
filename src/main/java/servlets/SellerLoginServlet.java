@@ -2,6 +2,8 @@ package servlets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -18,6 +20,7 @@ import com.bittercode.service.impl.UserServiceImpl;
 
 public class SellerLoginServlet extends HttpServlet {
 
+    private static final Logger LOGGER = Logger.getLogger(SellerLoginServlet.class.getName());
     private static final UserService userService = new UserServiceImpl();
 
     @Override
@@ -48,7 +51,7 @@ public class SellerLoginServlet extends HttpServlet {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Seller login failed", e);
         }
     }
 }

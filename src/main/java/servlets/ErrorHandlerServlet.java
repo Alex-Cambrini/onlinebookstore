@@ -18,7 +18,7 @@ import com.bittercode.model.UserRole;
 import com.bittercode.util.StoreUtil;
 
 public class ErrorHandlerServlet extends HttpServlet {
-    private static final Logger logger = Logger.getLogger(ErrorHandlerServlet.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ErrorHandlerServlet.class.getName());
 
     @Override
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
@@ -46,10 +46,10 @@ public class ErrorHandlerServlet extends HttpServlet {
             errorMessage = storeException.getMessage();
             statusCode = storeException.getStatusCode();
             errorCode = storeException.getErrorCode();
-            storeException.printStackTrace();
+            LOGGER.log(Level.SEVERE, "StoreException caught", storeException);
         }
 
-        logger.log(Level.SEVERE,
+        LOGGER.log(Level.SEVERE,
                 "======ERROR TRIGGERED========\nServlet Name: {0}\nRequest URI: {1}\nStatus Code: {2}\nError Code: {3}\nError Message: {4}\n=============================",
                 new Object[] { servletName, requestUri, statusCode, errorCode, errorMessage });
 

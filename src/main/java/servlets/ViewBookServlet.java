@@ -3,6 +3,8 @@ package servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -19,9 +21,11 @@ import com.bittercode.util.StoreUtil;
 
 public class ViewBookServlet extends HttpServlet {
 
+    private static final Logger LOGGER = Logger.getLogger(ViewBookServlet.class.getName());
     // book service for database operations and logics
-    BookService bookService = new BookServiceImpl();
+    final BookService bookService = new BookServiceImpl();
 
+    @Override
     public void service(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         PrintWriter pw = res.getWriter();
         res.setContentType("text/html");
@@ -71,7 +75,7 @@ public class ViewBookServlet extends HttpServlet {
                     + "    </div>");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error loading available books for customer", e);
         }
     }
 

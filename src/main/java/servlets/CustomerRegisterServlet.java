@@ -2,6 +2,7 @@ package servlets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
@@ -57,7 +58,7 @@ public class CustomerRegisterServlet extends HttpServlet {
                 pw.println("Sorry for interruption! Try again");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "User registration failed", e);
         }
     }
 }

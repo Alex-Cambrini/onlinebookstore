@@ -2,6 +2,8 @@ package servlets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -17,6 +19,7 @@ import com.bittercode.util.StoreUtil;
 
 public class RemoveBookServlet extends HttpServlet {
 
+    private static final Logger LOGGER = Logger.getLogger(RemoveBookServlet.class.getName());
     final BookService bookService = new BookServiceImpl();
 
     @Override
@@ -39,7 +42,7 @@ public class RemoveBookServlet extends HttpServlet {
             if (bookId == null || bookId.trim().isEmpty()) {
                 showRemoveBookForm(pw);
                 return;
-            } // else continue
+            }
 
             String responseCode = bookService.deleteBookById(bookId.trim());
             if (ResponseCode.SUCCESS.name().equalsIgnoreCase(responseCode)) {
@@ -54,9 +57,10 @@ public class RemoveBookServlet extends HttpServlet {
             }
             pw.println("</div>");
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed to remove books", e);
             pw.println("<table class=\"tab\"><tr><td>Failed to Remove Books! Try Again</td></tr></table>");
         }
+
     }
 
     private static void showRemoveBookForm(PrintWriter pw) {

@@ -69,7 +69,6 @@ public class ReceiptServlet extends HttpServlet {
             pw.println("</table><br/><div class='tab'>Total Paid Amount: " + total + "</div>");
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error in ReceiptServlet service: {0}", e.getMessage());
-            e.printStackTrace();
         }
     }
 

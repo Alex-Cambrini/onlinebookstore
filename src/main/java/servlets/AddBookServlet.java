@@ -3,6 +3,8 @@ package servlets;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -19,6 +21,8 @@ import com.bittercode.service.impl.BookServiceImpl;
 import com.bittercode.util.StoreUtil;
 
 public class AddBookServlet extends HttpServlet {
+
+    private static final Logger LOGGER = Logger.getLogger(AddBookServlet.class.getName());
     static BookService bookService = new BookServiceImpl();
 
     @Override
@@ -73,7 +77,7 @@ public class AddBookServlet extends HttpServlet {
                 pw.println("<table class=\"tab\"><tr><td>Failed to Add Books! Fill up Carefully</td></tr></table>");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed to add books", e);
             pw.println("<table class=\"tab\"><tr><td>Failed to Add Books! Fill up Carefully</td></tr></table>");
         }
     }
