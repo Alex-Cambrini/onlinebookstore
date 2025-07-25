@@ -141,18 +141,19 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<Book> getBooksByCommaSeperatedBookIds(String commaSeperatedBookIds) throws StoreException {
+    public List<Book> getBooksByCommaSeperatedBookIds(String commaSeparatedBookIds) throws StoreException {
         List<Book> books = new ArrayList<>();
-        String[] ids = commaSeperatedBookIds.split(",");
+        String[] ids = commaSeparatedBookIds.split(",");
         String placeholders = String.join(",", Collections.nCopies(ids.length, "?"));
-        String query = SELECT_ALL_FROM + BooksDBConstants.TABLE_BOOK
-                + WHERE_CLAUSE + BooksDBConstants.COLUMN_BARCODE + " IN (" + placeholders + ")";
+
+        String query = SELECT_ALL_FROM + BooksDBConstants.TABLE_BOOK +
+                WHERE_CLAUSE + BooksDBConstants.COLUMN_BARCODE + " IN (" + placeholders + ")";
 
         try (Connection con = DBUtil.getConnection();
                 PreparedStatement ps = con.prepareStatement(query)) {
 
             for (int i = 0; i < ids.length; i++) {
-                ps.setString(i + 1, ids[i].trim().replace("'", ""));
+                ps.setString(i + 1, ids[i].trim());
             }
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -169,7 +170,6 @@ public class BookServiceImpl implements BookService {
             LOGGER.severe("Error in getBooksByCommaSeperatedBookIds: " + e.getMessage());
             throw new StoreException(ResponseCode.DATABASE_CONNECTION_FAILURE);
         }
-
         return books;
     }
 
