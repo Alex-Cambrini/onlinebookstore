@@ -152,7 +152,7 @@ pipeline {
                 emailext (
                     subject: "${env.JOB_NAME} - Build #${env.BUILD_NUMBER} - FAILURE",
                     body: "Build or tests failed. Check build details: ${env.BUILD_URL}",
-                    to: EMAIL
+                    to: "${EMAIL}"
                 )
                 sh 'curl -s -X POST https://api.telegram.org/bot$TOKEN/sendMessage ' +
                 '-d chat_id=$CHAT_ID ' +
