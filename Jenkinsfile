@@ -72,7 +72,7 @@ pipeline {
                     echo 'Evaluating all security gates...'
 
                     echo 'Waiting for SonarQube Quality Gate result...'
-                    sleep 15
+                    sleep 20
                     timeout(time: 30, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
                         sonarQGStatus = qg.status
