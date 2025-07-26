@@ -138,11 +138,9 @@ pipeline {
                     body: "Build and tests succeeded. Check build details: ${env.BUILD_URL}",
                     to: EMAIL
                 )
-                sh """
-                    curl -s -X POST https://api.telegram.org/bot$TOKEN/sendMessage \
-                        -d chat_id=$CHAT_ID \
-                        -d text="✅ Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.BUILD_URL}"
-                """
+                sh 'curl -s -X POST https://api.telegram.org/bot$TOKEN/sendMessage ' +
+                '-d chat_id=$CHAT_ID ' +
+                '-d text="✅ Build SUCCESS: ' + env.JOB_NAME + ' #' + env.BUILD_NUMBER + ' - ' + env.BUILD_URL + '"'
             }
         }
         failure {
@@ -156,12 +154,10 @@ pipeline {
                     body: "Build or tests failed. Check build details: ${env.BUILD_URL}",
                     to: EMAIL
                 )
-                sh """
-                    curl -s -X POST https://api.telegram.org/bot$TOKEN/sendMessage \
-                        -d chat_id=$CHAT_ID \
-                        -d text="❌ Build FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} - ${env.BUILD_URL}"
-                """
+                sh 'curl -s -X POST https://api.telegram.org/bot$TOKEN/sendMessage ' +
+                '-d chat_id=$CHAT_ID ' +
+                '-d text="❌ Build FAILURE: ' + env.JOB_NAME + ' #' + env.BUILD_NUMBER + ' - ' + env.BUILD_URL + '"'
             }
         }
-    }
+    }    
 }
