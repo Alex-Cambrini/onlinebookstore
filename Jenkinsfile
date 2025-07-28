@@ -108,7 +108,7 @@ pipeline {
                 }
             }
         }
-        stage('Archiviazione Artefatti') {
+        stage('Artifact Archiving') {
             steps {
                 script {
                     echo 'Checking for WAR files to archive...'
