@@ -239,8 +239,85 @@ Commons IO 2.3 è inglobata in webapp-runner.jar, usato per eseguire onlinebooks
 - Usare `new File(baseDir, safeFileName).getCanonicalPath()` per prevenire path traversal.  
 - Applicare whitelist per nomi file e limitare privilegi di accesso ai file per ridurre i danni in caso di sfruttamento.  
 
-## 7. 
+## 7. possibile SQL injection
 
+**Nome Componente:** `BookServiceImpl.java`  
+**Descrizione:** La costruzione dinamica della query SQL concatenando direttamente la stringa commaSeperatedBookIds senza parametrizzazione espone a vulnerabilità di SQL Injection. Un attaccante potrebbe manipolare questo input per eseguire comandi SQL arbitrari, compromettendo la sicurezza e l’integrità del database.
+
+**Riga affetta:** Linea 151  
+**ID Regola Sonar:** `java:S2077`    
+**File:** `src/main/java/com/bittercode/service/impl/BookServiceImpl.java`  
+
+### Natura della Flaw  
+La costruzione dinamica della query SQL concatenando direttamente la stringa commaSeperatedBookIds espone l’applicazione a rischi di SQL Injection. Senza validazione o parametrizzazione, un input malevolo può alterare la query, causando:
+
+- Esecuzione di comandi SQL non previsti
+- Accesso o modifica non autorizzata ai dati
+- Potenziale compromissione dell’intero database
+
+L’assenza di controlli espliciti sulle eccezioni SQL peggiora il rischio, impedendo una gestione corretta degli errori e facilitando exploit.
+
+### Classificazione  
+- **CWE-89** – Improper Neutralization of Special Elements used in an SQL Command (SQL Injection)  
+- **CWE-20** – Improper Input Validation  
+- **OWASP A03:2021 – Injection**  
+- **OWASP A01:2017 – Injection**  
+- **CERT IDS00-J** – Prevent SQL Injection
+
+### Gravità  
+**HIGH**  
+**Rischi:**  
+- Accesso non autorizzato a dati sensibili  
+- Modifica o cancellazione non autorizzata di dati  
+- Esecuzione di comandi SQL arbitrari  
+- Compromissione dell’integrità e riservatezza dei dati  
+- Potenziale escalation verso Remote Code Execution (RCE)  
+- Interruzione del servizio (Denial of Service)  
+
+### Sfruttabilità  
+Alta. Può permettere a un attaccante di eseguire query SQL arbitrarie, accedere o modificare dati sensibili, o ottenere controllo remoto sul sistema.
+
+### Contesto Applicativo  
+La classe BookServiceImpl implementa operazioni CRUD su entità Book tramite query SQL eseguite su un database relazionale. La funzione getBooksByCommaSeperatedBookIds costruisce dinamicamente una query concatenando direttamente input esterno non sanitizzato nella clausola SQL IN. Questo espone il componente a rischi di SQL Injection, permettendo a un attaccante di manipolare la query e potenzialmente accedere o modificare dati non autorizzati.
+
+L’assenza di gestione esplicita delle eccezioni SQLException e di log aumenta il rischio di malfunzionamenti silenti e difficili da diagnosticare.
+
+### Mitigazione/Fix  
+Gestire `IOException` con un blocco `try-catch`, log sicuro, e invio di errore controllato:  
+```java
+@Override
+public List<Book> getBooksByCommaSeperatedBookIds(String commaSeparatedBookIds) throws StoreException {
+    List<Book> books = new ArrayList<>();
+    String[] ids = commaSeparatedBookIds.split(",");
+    String placeholders = String.join(",", Collections.nCopies(ids.length, "?"));
+
+    String query = "SELECT * FROM " + BooksDBConstants.TABLE_BOOK +
+                   " WHERE " + BooksDBConstants.COLUMN_BARCODE + " IN (" + placeholders + ")";
+
+    try (Connection con = DBUtil.getConnection();
+         PreparedStatement ps = con.prepareStatement(query)) {
+
+        for (int i = 0; i < ids.length; i++) {
+            ps.setString(i + 1, ids[i].trim());
+        }
+
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                books.add(new Book(
+                    rs.getString(1),
+                    rs.getString(2),
+                    rs.getString(3),
+                    rs.getInt(4),
+                    rs.getInt(5)));
+            }
+        }
+    } catch (SQLException e) {
+        LOGGER.severe("Error in getBooksByCommaSeperatedBookIds: " + e.getMessage());
+        throw new StoreException(ResponseCode.DATABASE_CONNECTION_FAILURE);
+    }
+    return books;
+}
+```
 
 
 
@@ -273,10 +350,10 @@ Il metodo `getWriter()` può fallire in caso di problemi con il flusso di output
 - Denial of Service locale su endpoint specifici  
 
 ### Sfruttabilità  
-Media. Non sfruttabile per RCE, ma può essere usata per causare malfunzionamenti, errori inaspettati o capire la struttura dell’applicazione.
+Media. Non porta a esecuzione remota di codice, ma può causare malfunzionamenti e rivelare struttura interna.
 
 ### Contesto Applicativo  
-Componente `BuyBooksServlet` gestisce richieste POST per l’acquisto. Se l’errore avviene, l’utente riceve una risposta HTTP corrotta e l’operazione viene interrotta in modo anomalo.
+`BuyBooksServlet` gestisce richieste POST per acquisti. In caso di errore, la risposta HTTP risulta corrotta e l’operazione si interrompe anormalmente.
 
 ### Mitigazione/Fix  
 Gestire `IOException` con un blocco `try-catch`, log sicuro, e invio di errore controllato:  
@@ -291,35 +368,46 @@ try {
     return;
 }
 ```
+### Raccomandazioni
+- Non lasciare eccezioni checked non gestite nei servlet.
+- Loggare sempre errori in modo sicuro senza esporre dettagli all’utente.
+- Fornire messaggi di errore generici e user-friendly.
+- Integrare test di sicurezza specifici sulla gestione delle eccezioni.
 
-## 9. Servlet Exception Handling Issue in CheckoutServlet
+## 9. Gestione eccezioni Servlet in CheckoutServlet
 
-**Nome Dipendenza/Componente:**  Java Servlet `doPost` method in `CheckoutServlet.java`  
-**Descrizione:** Il metodo `doPost` lancia eccezioni `ServletException` e `IOException` non gestite internamente, in particolare su chiamate a `include` di `RequestDispatcher`. Questo espone la servlet a problemi di stabilità e sicurezza.  
-**Versione Affetta:** Codice sorgente attuale senza gestione try/catch interna sulle eccezioni `ServletException`, `IOException`  
-**ID Vulnerabilità:** N/A (issue di qualità e sicurezza nel codice servlet, rilevato come SonarQube rule java:S1989)  
+**Nome Componente:** `CheckoutServlet.java`  
+**Descrizione:** Il metodo doPost non gestisce internamente le eccezioni ServletException e IOException generate da RequestDispatcher.include(). Ciò può causare crash o esposizione di informazioni sensibili.
+
+**Riga affetta:** Linea 22  
+**ID Regola Sonar:** `java:S1989`  
+**Tag:** `cwe`, `error-handling`  
+**File:** `src/main/java/servlets/CheckoutServlet.java`  
 
 ### Natura della Flaw  
-Il metodo servlet non cattura internamente eccezioni checked obbligatorie (`ServletException`, `IOException`) nelle chiamate a `RequestDispatcher.include()`. Questo comporta:  
-- Possibile propagazione incontrollata dell’eccezione al contenitore servlet, causando crash o comportamenti inattesi.  
-- Rischio di denial-of-service se il contenitore si blocca o si destabilizza.  
-- Esposizione di dettagli tecnici sensibili (stack trace, configurazioni) all’utente finale, compromettendo la sicurezza.  
+La mancata cattura delle eccezioni checked durante RequestDispatcher.include() può:
+
+- Far propagare eccezioni al contenitore servlet con crash o comportamenti inattesi
+- Causare denial-of-service su endpoint critici
+- Esporre stack trace e configurazioni sensibili all’utente finale
 
 ### Classificazione  
 - CWE-600: Uncaught Exception in Servlet  
-- Software qualities impacted: Security, Consistency  
+- Impatto su sicurezza e consistenza del software  
 
 ### Gravità  
-Media-alta, per rischio DoS e leak di informazioni sensibili.
+**MEDIUM-HIGH**  
+**Rischi:** Denial of Service e perdita di informazioni riservate.
+
 
 ### Sfruttabilità  
-Dipende dal contesto di esecuzione, ma potenzialmente elevata in caso di input malformati o condizioni anomale che causano l’eccezione.
+Potenzialmente elevata in caso di input malformati o errori interni.
 
 ### Contesto Applicativo  
-Applicazione Java web basata su servlet, gestione login e pagamento in `CheckoutServlet.java`.
+Servlet responsabile di login e gestione pagamento. Mancata gestione eccezioni può bloccare il flusso e mostrare errori non controllati.
 
 ### Mitigazione/Fix  
-Modificare il metodo `doPost` per catturare internamente le eccezioni `ServletException` e `IOException` in blocchi try/catch attorno alle chiamate che le possono generare (es. `RequestDispatcher.include`).  
+Avvolgere chiamate potenzialmente pericolose in try-catch che gestiscono ServletException e IOException:
 
 ```java
 try {
@@ -332,41 +420,46 @@ try {
     return;
 }
 ```
+### Raccomandazioni
+- Gestire tutte le eccezioni checked interne ai servlet.
+- Evitare la propagazione delle eccezioni al container.
+- Fornire messaggi di errore generici e log sicuri.
+- Implementare test di sicurezza sulla gestione delle eccezioni.
 
 
+## 10. Gestione eccezione StoreException in CustomerLoginServlet#doPost
 
-## 10. Handle exception StoreException in CustomerLoginServlet#doPost
-
-**Nome Dipendenza/Componente:** CustomerLoginServlet#doPost (Java Servlet)
-
+**Nome Componente:** `CustomerLoginServlet.java`  
 **Descrizione:**  
-Il metodo doPost del servlet CustomerLoginServlet chiama il metodo login di authService che può lanciare una StoreException. Attualmente questa eccezione non viene gestita internamente, ma propagata fuori dal metodo.
+Il metodo doPost chiama authService.login che può lanciare una StoreException custom non gestita internamente, causando potenziali crash o leak di informazioni.
 
-**Versione Affetta:** codice sorgente Java servlets, file CustomerLoginServlet.java
-
-**ID Vulnerabilità:** SonarJava rule S1989 (Exceptions should not be thrown from servlet methods)
+**Riga affetta:** Linea 28 
+**ID Regola Sonar:** `java:S1989`  
+**Tag:** `cwe`, `error-handling`  
+**File:** `src/main/java/servlets/CustomerLoginServlet.java`  
 
 ### Natura della Flaw  
-Le eccezioni non gestite lanciate dai metodi servlet possono:  
-- causare instabilità nel container servlet, portando a denial-of-service;  
-- esporre informazioni sensibili (stack trace, configurazioni) all’utente finale;  
-- compromettere la sicurezza e la stabilità del sistema.
+Le eccezioni non gestite in servlet possono:
+- Instabilizzare il container causando denial-of-service
+- Esporre informazioni sensibili (stack trace, configurazioni)  
+- compromettere la sicurezza e la stabilità del sistema
 
 ### Classificazione  
 - CWE-600: Uncaught Exception in Servlet  
-- Sicurezza: potenziale esposizione di dati sensibili e DoS
+- Rischio di esposizione dati e DoS
 
 ### Gravità  
-Media-alta: problemi di sicurezza e stabilità applicativa dovuti a gestione eccezioni inadeguata.
+**MEDIUM**  
+**Rischi:** sicurezza e stabilità applicativa compromesse.
 
 ### Sfruttabilità  
-Dipende dal contesto, ma lanciare eccezioni non gestite in servlet espone il sistema a vulnerabilità di tipo DoS e leak informativi.
+Dipende dal contesto, ma espone a DoS e leak informativi.
 
 ### Contesto Applicativo  
 Servlet responsabile del login cliente in un’applicazione web Java, che non gestisce StoreException durante la chiamata a authService.login.
 
 ### Mitigazione/Fix  
-Circondare tutte le chiamate che possono generare eccezioni (inclusa authService.login) con blocchi try/catch all’interno del metodo doPost, catturando StoreException (e altre potenziali) e gestendole in modo appropriato (log, messaggio utente generico, redirect a pagina errore).
+Gestire StoreException (e altre) con try-catch interno a doPost:
 
 ```java
 public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
@@ -391,3 +484,11 @@ public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOExc
 - Gestire tutte le eccezioni internamente con try/catch.  
 - Fornire messaggi di errore user-friendly senza leak di informazioni sensibili.  
 - Integrare test di sicurezza e revisione codice specifica per gestione eccezioni in servlet.
+
+
+## Screenshot delle rilevaizoni
+![Screenshot summary of vulnerable dependencias](./screenshots/vulnerabilità.png)
+![Screenshot SQL injection](./screenshots/SQL-injection.png)
+![Screenshot approfondimento 8](./screenshots/v1.png)
+![Screenshot approfondimento 9](./screenshots/v2.png)
+![Screenshot approfondimento 10](./screenshots/v3.png)

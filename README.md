@@ -33,7 +33,7 @@ Il codice sorgente è basato sul repository Java [onlinebookstore](https://githu
 ---
 ### Descrizione dettagliata degli step
 
-![Pipeline Overview](/screenshots/pipelineOverView.png)
+![Pipeline Overview](./screenshots/pipelineOverView.png)
 
 
 * **Stage 1 – Cleanup & Checkout SCM**
@@ -61,6 +61,8 @@ Il codice sorgente è basato sul repository Java [onlinebookstore](https://githu
     ```bash
     mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
     ```
+    Questo comando integra i report di copertura del codice generati da Jacoco, uno strumento che misura quali parti del codice sono state eseguite dai test unitari, permettendo a SonarQube di visualizzare e valutare la copertura del progetto.
+    
 
 * **Stage 5 – Security Gates Evaluation**
     Verifica dei gate con:
@@ -83,11 +85,13 @@ Il codice sorgente è basato sul repository Java [onlinebookstore](https://githu
     ```groovy
     archiveArtifacts artifacts: 'target/*.war', fingerprint: true
     ```
-
+    **Nota:** i report di OWASP Dependency-Check vengono archiviati nello stage 3, mentre in questo stage si archivia solo il package deployabile (.war).
 * **Stage 7 – Notifiche Post-Build**
     Sia in caso di successo che di fallimento, le notifiche sono inviate via:
     * Email tramite plugin `emailext`
     * Telegram via bot API chiamata `curl`
+
+    ![Notifica mail e telegram](./screenshots/build-result.png)  
 
 ## 3. Analisi delle librerie (SCA)
 
@@ -98,8 +102,8 @@ Per l’analisi delle librerie di terze parti è stato utilizzato OWASP Dependen
 Durante la scansione sono state rilevate vulnerabilità nelle librerie utilizzate, con dettagli che saranno approfonditi nei report generati.
 
 ### Screenshot significativi
-![Screenshot 2025-07-21_143138](/screenshots/Screenshot%202025-07-21_143138.png)  
-![Screenshot 2025-07-22_122301](/screenshots/Screenshot%202025-07-22_122301.png)
+![Screenshot 2025-07-21_143138](./screenshots/Screenshot%202025-07-21_143138.png)  
+![Screenshot 2025-07-22_122301](./screenshots/Screenshot%202025-07-22_122301.png)
 *Report generato da OWASP Dependency-Check con le vulnerabilità rilevate.*
 
 ### Gravità e impatto delle vulnerabilità
@@ -118,7 +122,7 @@ Per l’analisi statica del codice sono stati utilizzati SonarQube e PMD Warning
 
 I due strumenti si integrano per offrire un’analisi completa e dettagliata della qualità e sicurezza del codice.
 
-![PMD Warnings Report](/screenshots/pmd-warnings.png)
+![PMD Warnings Report](./screenshots/pmd-warnings.png)
 ### Risultati delle scansioni
 Le scansioni hanno identificato diverse vulnerabilità e problemi di qualità, con un focus sulle aree critiche del codice. I risultati sono stati raccolti nei report generati e visualizzati in Jenkins e SonarQube.
 
@@ -133,18 +137,18 @@ Le prime scansioni hanno evidenziato diverse criticità sul progetto:
 - **Duplicazione del codice**: 10.6%
 - **Security Hotspot**: 59 rilevati
 
-Tutti questi problemi sono stati progressivamente analizzati e risolti.  
-Un approfondimento su 10 vulnerabilità critiche è riportato nella sezione successiva, con dettagli tecnici, screenshot e suggerimenti di fix.
+Tutti questi problemi sono stati progressivamente analizzati e risolti. Per migliorare la copertura del codice, inizialmente a zero, abbiamo integrato Jacoco nella pipeline (come configurato nello Stage 4) e scritto test unitari dedicati. Questo ha permesso di aumentare significativamente la percentuale di codice coperto, contribuendo a rendere l'applicazione più robusta e stabile. Un approfondimento su 10 vulnerabilità critiche è riportato nella sezione successiva, con dettagli tecnici, screenshot e suggerimenti di fix.
 
-![SonarQube Quality Gate Failed](/screenshots/sonarqube-quality-gate-failed.png)
+
+![SonarQube Quality Gate Failed](./screenshots/sonarqube-quality-gate-failed.png)
 
 ### Configurazione Quality Gate
 I Quality Gate di SonarQube sono stati personalizzati con condizioni differenziate tra nuovo codice e codice complessivo, per controllare aspetti di sicurezza, affidabilità, duplicazioni e copertura.  
 Questa configurazione garantisce che la pipeline venga bloccata in caso di superamento delle soglie stabilite, assicurando così la qualità e sicurezza del software. 
 
 I dettagli delle condizioni sono visibili negli screnshots allegati.
-![SonarQube Quality Gate](/screenshots/sonarqube-quality-gate1.png)  
-![SonarQube Quality Gate](/screenshots/sonarqube-quality-gate2.png)  
+![SonarQube Quality Gate](./screenshots/sonarqube-quality-gate1.png)  
+![SonarQube Quality Gate](./screenshots/sonarqube-quality-gate2.png)  
 
 ## 5. Approfondimento 10 vulnerabilità
 
@@ -155,7 +159,7 @@ I dettagli delle condizioni sono visibili negli screnshots allegati.
 
 #### ❌ Security issue:  
 La chiamata a `res.getWriter()` non era gestita. In caso di errore I/O (es. connessione chiusa), poteva lanciare `IOException` non gestita, causando crash, stack trace visibili o comportamento anomalo.
-
+![Immagine vulnerabilità 6.1](./screenshots/6.1.png) 
 
 **Codice vulnerabile:**
 ```java
@@ -199,8 +203,8 @@ Il progetto utilizzava webapp-runner versione 8.0.30.2 (gruppo com.github.jsimon
 CVE-2019-20444, CVE-2019-20445, CVE-2015-2156, CVE-2019-16869, CVE-2020-11612, CVE-2021-37136, CVE-2021-37137, CVE-2022-41881, CVE-2023-44487  
 - Diverse vulnerabilità DoS e bypass di autenticazione.
 
-![Maven Central: webapp-runner versione con Netty vulnerabile](/screenshots/maven-central_webapp-runner_contains-netty.png)  
-![Vulnerabilità nella versione 8.0.30.2 di webapp-runner](/screenshots/webapp-runner_vulnerability_version.png)  
+![Maven Central: webapp-runner versione con Netty vulnerabile](./screenshots/maven-central_webapp-runner_contains-netty.png)  
+![Vulnerabilità nella versione 8.0.30.2 di webapp-runner](./screenshots/webapp-runner_vulnerability_version.png)  
 
 
 📌 Evidenza:
@@ -208,7 +212,7 @@ Lo strumento OWASP Dependency-Check ha segnalato che la versione 8.0.30.2 di web
 
 Inizialmente è stata testata la versione 9.0.27.1 (stesso groupId/artifactId), che però non risolveva la vulnerabilità perché nel package era comunque presente la libreria Netty 3.5.5, anche se non dichiarata come dipendenza esplicita su Maven Repository. Per questo si è optato per la versione 10.1.42.0, con groupId aggiornato e artifactId uguale, che include fix completi.
 
-![Maven Central: webapp-runner senza libreria Netty](/screenshots/maven-central_webapp-runner_no-netty.png) 
+![Maven Central: webapp-runner senza libreria Netty](./screenshots/maven-central_webapp-runner_no-netty.png) 
 ```xml
 
 <--- Codice Iniziale --->
@@ -227,13 +231,10 @@ Inizialmente è stata testata la versione 9.0.27.1 (stesso groupId/artifactId), 
     <destFileName>webapp-runner.jar</destFileName>
 </artifactItem>
 ```
-
-
-
 ## 7. Conclusioni
 Le immagini mostrano che, a seguito delle correzioni, il codice modificato supera il Quality Gate, confermando la risoluzione delle vulnerabilità critiche individuate.
 
-![Grafico andamento vulnerabilità dipendenze](/screenshots/dependency_trend.png)  
-![Risultati OWASP Dependency-Check senza vulnerabilità](/screenshots/dependency-check-no-results.png)  
-![PMD Warinigs senza avvisi](/screenshots/pmd-warnings-no-issue.png)  
-![Quality Gate SonarQube superato dopo la correzione](/screenshots/sonarqube-after-fix.png)
+![Grafico andamento vulnerabilità dipendenze](./screenshots/dependency_trend.png)  
+![Risultati OWASP Dependency-Check senza vulnerabilità](./screenshots/dependency-check-no-results.png)  
+![PMD Warinigs senza avvisi](./screenshots/pmd-warnings-no-issue.png)  
+![Quality Gate SonarQube superato dopo la correzione](./screenshots/sonarqube-after-fix.png)
