@@ -191,8 +191,10 @@ Incluso in `onlinebookstore.war`, il connettore gestisce le connessioni a databa
 Se esposto a rete e con configurazioni vulnerabili, è a rischio.
 
 ### Mitigazione/Fix  
-- Aggiornare a `mysql-connector-java` versione **> 8.1.0**  
-- Tutte le versioni **≤ 8.1.0** sono vulnerabili
+- Aggiornare a com.mysql:mysql-connector-j versione **9.0.0** o superiore (ultima stabile disponibile)
+- Tutte le versioni **8.0.x** di mysql:mysql-connector-java sono vulnerabili
+
+**Nota:** la versione 9.x introduce breaking changes, inclusi il cambio di groupId e modifiche API, ma è la versione consigliata per nuove configurazioni e aggiornamenti di sicurezza.
 
 ### Raccomandazioni 
 - Aggiornare subito alla versione più recente e sicura  
