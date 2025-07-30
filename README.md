@@ -13,7 +13,7 @@ L'intera pipeline è stata realizzata tramite **Jenkins in ambiente Docker**, co
 
 Il codice sorgente è basato sul repository Java [onlinebookstore](https://github.com/shashirajraja/onlinebookstore), compilato tramite **Maven**. Il `Jenkinsfile` definisce tutti gli step del processo CI/CD, con controlli automatici di sicurezza e qualità.
 
----
+La pipeline è configurata per avviarsi automaticamente ad ogni push (commit) sul repository Git, garantendo un feedback immediato sul codice.
 
 ### Strumenti utilizzati
 
@@ -30,7 +30,7 @@ Il codice sorgente è basato sul repository Java [onlinebookstore](https://githu
     * SonarQube Quality Gate
     * OWASP Dependency-Check (zero vulnerabilità High/Critical ammesse)
 
----
+
 ### Descrizione dettagliata degli step
 
 ![Pipeline Overview](./screenshots/pipelineOverView.png)
