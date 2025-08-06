@@ -9,7 +9,7 @@ pipeline {
         timestamps()
     }
     stages {
-
+        //stage 1
         stage('Build, Test, PMD & SonarQube Analysis') {
             steps {
                 ansiColor('xterm') {
@@ -29,7 +29,7 @@ pipeline {
                 }
             }
         }
-        //stage 3
+        //stage 2
         stage('SCA - OWASP Dependency-Check') {
             steps {
                 ansiColor('xterm') {
@@ -43,7 +43,7 @@ pipeline {
                 }
             }
         }
-        //stage 5
+        //stage 3
         stage('Security Gates Evaluation') {
             steps {
                 script {
@@ -89,7 +89,7 @@ pipeline {
                 }
             }
         }
-        //stage 6
+        //stage 4
         stage('Artifact Archiving') {
             steps {
                 script {
