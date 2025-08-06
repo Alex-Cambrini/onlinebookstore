@@ -9,17 +9,6 @@ pipeline {
         timestamps()
     }
     stages {
-        //stage 1
-        stage('Cleanup & Checkout SCM') {
-            steps {
-                script {
-                    cleanWs()                    
-                }
-                echo 'Starting SCM Checkout...'
-                checkout scm
-                echo 'SCM Checkout completed.'
-            }
-        }
         //stage 2
         stage('Build, Test & PMD Analysis') {
             steps {
