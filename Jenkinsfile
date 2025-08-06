@@ -3,25 +3,24 @@ pipeline {
     tools {
         maven 'Maven 3.9.10'
         jdk 'JDK 8'
-        nodejs 'NodeGlobal'
     }
     options {
         timeout(time: 60, unit: 'MINUTES')
         timestamps()
     }
     stages {
+        //stage 1
         stage('Cleanup & Checkout SCM') {
             steps {
                 script {
-                    cleanWs()
-                    
+                    cleanWs()                    
                 }
                 echo 'Starting SCM Checkout...'
                 checkout scm
                 echo 'SCM Checkout completed.'
-                sh 'mkdir -p dependency-check-report'
             }
         }
+        //stage 2
         stage('Build, Test & PMD Analysis') {
             steps {
                 ansiColor('xterm') {
@@ -33,19 +32,21 @@ pipeline {
                 }
             }
         }
+        //stage 3
         stage('SCA - OWASP Dependency-Check') {
             steps {
                 ansiColor('xterm') {
                     script {
                         echo 'Starting OWASP Dependency-Check...'
                         dependencyCheck odcInstallation: 'Dependency-Check',
-                            additionalArguments: '--format HTML --format XML --out dependency-check-report'
+                            additionalArguments: '--format HTML --format XML --out target'
                         echo 'OWASP Dependency-Check scan completed.'
-                        archiveArtifacts artifacts: 'dependency-check-report/dependency-check-report.html, dependency-check-report/dependency-check-report.xml', fingerprint: true
+                        archiveArtifacts artifacts: 'target/dependency-check-report.html, target/dependency-check-report.xml', fingerprint: true
                     }
                 }
             }
         }
+        //stage 4
         stage('SonarQube Analysis') {
             steps {
                 ansiColor('xterm') {
@@ -63,6 +64,7 @@ pipeline {
                 }
             }
         }
+        //stage 5
         stage('Security Gates Evaluation') {
             steps {
                 script {
@@ -108,6 +110,7 @@ pipeline {
                 }
             }
         }
+        //stage 6
         stage('Artifact Archiving') {
             steps {
                 script {
