@@ -43,8 +43,8 @@ pipeline {
                         echo 'Starting SonarQube analysis...'
                         retry(2) {
                             withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                                withSonarQubeEnv('LocalSonarQube') {
-                                    sh 'mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
+                                withSonarQubeEnv('LocalSonarQube') {                                
+                                   sh 'mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml -Dsonar.java.binaries=target/classes -Dsonar.java.test.binaries=target/test-classes'
                                 }
                             }
                         }
