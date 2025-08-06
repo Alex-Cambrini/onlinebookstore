@@ -66,7 +66,7 @@ pipeline {
 
                     echo 'Evaluating OWASP Dependency-Check Quality Gate...'
                     try {
-                        dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml',
+                        dependencyCheckPublisher pattern: 'target/dependency-check-report.xml',
                             failedTotalHigh: 0,
                             failedTotalCritical: 0,
                             stopBuild: true
