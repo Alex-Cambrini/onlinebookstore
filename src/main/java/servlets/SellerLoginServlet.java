@@ -51,7 +51,7 @@ public class SellerLoginServlet extends HttpServlet {
             }
 
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Seller login failed", e);
+            LOGGER.log(Level.INFO, "Seller login failed", e);
         }
     }
 }

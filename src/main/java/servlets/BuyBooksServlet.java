@@ -39,7 +39,7 @@ public class BuyBooksServlet extends HttpServlet {
             processBooksSafe(pw, req, res);
 
         } catch (IOException e) {
-            logger.log(Level.SEVERE, e, () -> "Failed to get writer from response: " + e.getMessage());
+            logger.log(Level.INFO, e, () -> "Failed to get writer from response: " + e.getMessage());
             sendInternalServerError(res);
         }
     }
@@ -48,11 +48,11 @@ public class BuyBooksServlet extends HttpServlet {
         try {
             includePage(req, res, "CustomerLogin.html");
         } catch (ServletException e) {
-            logger.log(Level.SEVERE, e, () -> "ServletException while including CustomerLogin.html: " + e.getMessage());
+            logger.log(Level.INFO, e, () -> "ServletException while including CustomerLogin.html: " + e.getMessage());
             sendInternalServerError(res);
             return;
         } catch (IOException e) {
-            logger.log(Level.SEVERE, e, () -> "IOException while including CustomerLogin.html: " + e.getMessage());
+            logger.log(Level.INFO, e, () -> "IOException while including CustomerLogin.html: " + e.getMessage());
             sendInternalServerError(res);
             return;
         }
@@ -63,10 +63,10 @@ public class BuyBooksServlet extends HttpServlet {
         try {
             processBooks(pw, req, res);
         } catch (ServletException e) {
-            logger.log(Level.SEVERE, e, () -> "ServletException during book processing: " + e.getMessage());
+            logger.log(Level.INFO, e, () -> "ServletException during book processing: " + e.getMessage());
             sendInternalServerError(res);
         } catch (IOException e) {
-            logger.log(Level.SEVERE, e, () -> "IOException during book processing: " + e.getMessage());
+            logger.log(Level.INFO, e, () -> "IOException during book processing: " + e.getMessage());
             sendInternalServerError(res);
         }
     }
@@ -120,7 +120,7 @@ public class BuyBooksServlet extends HttpServlet {
         try {
             res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR_MSG);
         } catch (IOException e) {
-            logger.log(Level.SEVERE, e, () -> "Failed to send error response: " + e.getMessage());
+            logger.log(Level.INFO, e, () -> "Failed to send error response: " + e.getMessage());
         }
     }
 }

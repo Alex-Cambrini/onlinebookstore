@@ -46,10 +46,10 @@ public class ErrorHandlerServlet extends HttpServlet {
             errorMessage = storeException.getMessage();
             statusCode = storeException.getStatusCode();
             errorCode = storeException.getErrorCode();
-            LOGGER.log(Level.SEVERE, "StoreException caught", storeException);
+            LOGGER.log(Level.INFO, "StoreException caught", storeException);
         }
 
-        LOGGER.log(Level.SEVERE,
+        LOGGER.log(Level.INFO,
                 "======ERROR TRIGGERED========\nServlet Name: {0}\nRequest URI: {1}\nStatus Code: {2}\nError Code: {3}\nError Message: {4}\n=============================",
                 new Object[] { servletName, requestUri, statusCode, errorCode, errorMessage });
 

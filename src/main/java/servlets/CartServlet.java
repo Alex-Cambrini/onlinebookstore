@@ -107,7 +107,7 @@ public class CartServlet extends HttpServlet {
                         + "    </div>");
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error in service method", e);
+            LOGGER.log(Level.INFO, "Error in service method", e);
             pw.println(
                     "<table class=\"tab\"><tr><td>Unexpected error occurred. Please try again later.</td></tr></table>");
         }

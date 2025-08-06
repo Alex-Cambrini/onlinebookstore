@@ -35,7 +35,7 @@ public class LogoutServlet extends HttpServlet {
                 pw.println("<table class=\"tab\"><tr><td>Successfully logged out!</td></tr></table>");
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Logout failed", e);
+            LOGGER.log(Level.INFO, "Logout failed", e);
         }
     }
 }

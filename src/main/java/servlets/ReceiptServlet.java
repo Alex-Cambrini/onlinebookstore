@@ -68,7 +68,7 @@ public class ReceiptServlet extends HttpServlet {
 
             pw.println("</table><br/><div class='tab'>Total Paid Amount: " + total + "</div>");
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error in ReceiptServlet service: {0}", e.getMessage());
+            LOGGER.log(Level.INFO, "Error in ReceiptServlet service: {0}", e.getMessage());
         }
     }
 
@@ -100,7 +100,7 @@ public class ReceiptServlet extends HttpServlet {
                 return amount;
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error processing book: {0} - {1}",
+            LOGGER.log(Level.INFO, "Error processing book: {0} - {1}",
                     new Object[] { book.getBarcode(), e.getMessage() });
         }
         return 0;

@@ -70,7 +70,7 @@ public class StoreBookServlet extends HttpServlet {
                     + "</table></div>");
 
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error while displaying seller book list", e);
+            LOGGER.log(Level.INFO, "Error while displaying seller book list", e);
         }
     }
 

@@ -50,7 +50,7 @@ public class CustomerLoginServlet extends HttpServlet {
                 pw.println("<table class=\"tab\"><tr><td>Incorrect UserName or PassWord</td></tr></table>");
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error during customer login process", e);
+            LOGGER.log(Level.INFO, "Error during customer login process", e);
         }
     }
 }

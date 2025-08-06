@@ -77,7 +77,7 @@ public class AddBookServlet extends HttpServlet {
                 pw.println("<table class=\"tab\"><tr><td>Failed to Add Books! Fill up Carefully</td></tr></table>");
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to add books", e);
+            LOGGER.log(Level.INFO, "Failed to add books", e);
             pw.println("<table class=\"tab\"><tr><td>Failed to Add Books! Fill up Carefully</td></tr></table>");
         }
     }

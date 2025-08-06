@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
                 }
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Database error occurred", e);
+            LOGGER.log(Level.INFO, "Database error occurred", e);
         }
         return user;
     }
@@ -90,7 +90,7 @@ public class UserServiceImpl implements UserService {
             responseMessage += " : " + e.getMessage();
             if (responseMessage.contains("Duplicate"))
                 responseMessage = "User already registered with this email !!";
-            LOGGER.log(Level.SEVERE, "Exception caught", e);
+            LOGGER.log(Level.INFO, "Exception caught", e);
         }
         return responseMessage;
     }

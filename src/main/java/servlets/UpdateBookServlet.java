@@ -70,7 +70,7 @@ public class UpdateBookServlet extends HttpServlet {
             }
 
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to load or update book data", e);
+            LOGGER.log(Level.INFO, "Failed to load or update book data", e);
             pw.println("<table class=\"tab\"><tr><td>Failed to Load Book data!!</td></tr></table>");
         }
     }

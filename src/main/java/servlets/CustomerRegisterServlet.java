@@ -58,7 +58,7 @@ public class CustomerRegisterServlet extends HttpServlet {
                 pw.println("Sorry for interruption! Try again");
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "User registration failed", e);
+            LOGGER.log(Level.INFO, "User registration failed", e);
         }
     }
 }

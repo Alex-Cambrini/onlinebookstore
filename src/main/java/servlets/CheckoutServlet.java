@@ -54,11 +54,11 @@ public class CheckoutServlet extends HttpServlet {
                     + " </div>\r\n"
                     + " </div>");
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, e, () -> "IO error in CheckoutServlet: " + e.getMessage());
+            LOGGER.log(Level.INFO, e, () -> "IO error in CheckoutServlet: " + e.getMessage());
         } catch (ServletException e) {
-            LOGGER.log(Level.SEVERE, e, () -> "Servlet error in CheckoutServlet: " + e.getMessage());
+            LOGGER.log(Level.INFO, e, () -> "Servlet error in CheckoutServlet: " + e.getMessage());
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e, () -> "Unexpected error in CheckoutServlet: " + e.getMessage());
+            LOGGER.log(Level.INFO, e, () -> "Unexpected error in CheckoutServlet: " + e.getMessage());
         } finally {
             if (pw != null) {
                 pw.close();

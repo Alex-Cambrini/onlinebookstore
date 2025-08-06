@@ -75,7 +75,7 @@ public class ViewBookServlet extends HttpServlet {
                     + "    </div>");
 
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error loading available books for customer", e);
+            LOGGER.log(Level.INFO, "Error loading available books for customer", e);
         }
     }
 

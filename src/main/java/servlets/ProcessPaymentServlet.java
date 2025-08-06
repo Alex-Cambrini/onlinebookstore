@@ -70,7 +70,7 @@ public class ProcessPaymentServlet extends HttpServlet {
             pw.println("</div>\r\n"
                     + "    </div>");
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error processing order/cart", e);
+            LOGGER.log(Level.INFO, "Error processing order/cart", e);
         }
     }
 

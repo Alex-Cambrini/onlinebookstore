@@ -26,7 +26,7 @@ class DatabaseConfig {
         try {
             prop.load(input);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Failed to load properties", e);
+            LOGGER.log(Level.INFO, "Failed to load properties", e);
         }
 
         DRIVER_NAME = prop.getProperty("db.driver");

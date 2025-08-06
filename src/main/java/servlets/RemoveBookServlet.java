@@ -57,7 +57,7 @@ public class RemoveBookServlet extends HttpServlet {
             }
             pw.println("</div>");
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to remove books", e);
+            LOGGER.log(Level.INFO, "Failed to remove books", e);
             pw.println("<table class=\"tab\"><tr><td>Failed to Remove Books! Try Again</td></tr></table>");
         }
 
