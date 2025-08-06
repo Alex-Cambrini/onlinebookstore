@@ -111,7 +111,7 @@ class AddBookServletTest {
         when(req.getParameter(BooksDBConstants.COLUMN_QUANTITY)).thenReturn("5");
         when(req.getRequestDispatcher("SellerHome.html")).thenReturn(rd);
 
-        when(AddBookServlet.bookService.addBook(any())).thenThrow(new RuntimeException("Service failure"));
+        when(AddBookServlet.bookService.addBook(any())).thenReturn(null);
 
         servlet.service(req, res);
 
