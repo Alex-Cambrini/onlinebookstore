@@ -107,7 +107,7 @@ class UserServiceImplTest {
         user.setAddress("Via Roma");
         user.setPhone(1234567890L);
 
-        when(mockStatement.executeUpdate()).thenThrow(new SQLException("Duplicate entry"));
+        when(mockStatement.executeUpdate()).thenReturn(0);
 
         String result = userService.register(UserRole.CUSTOMER, user);
         assertEquals("User already registered with this email !!", result);

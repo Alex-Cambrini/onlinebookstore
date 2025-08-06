@@ -85,6 +85,8 @@ public class UserServiceImpl implements UserService {
             int k = ps.executeUpdate();
             if (k == 1) {
                 responseMessage = ResponseCode.SUCCESS.name();
+            } else {
+                responseMessage = "User already registered with this email !!";
             }
         } catch (Exception e) {
             responseMessage += " : " + e.getMessage();
@@ -94,5 +96,4 @@ public class UserServiceImpl implements UserService {
         }
         return responseMessage;
     }
-
 }
