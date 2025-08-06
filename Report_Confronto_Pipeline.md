@@ -23,7 +23,7 @@ La seconda pipeline risparmia circa 10-15 secondi rispetto alla prima.
 ## Analisi del risparmio di tempo
 
 1. **Unificazione degli stage**  
-   Riduce overhead di setup e teardown.
+   Riduce l’overhead di operazioni ripetitive dovute a più esecuzioni separate di Maven, ora eseguite una sola volta grazie all’unificazione degli stage.
 
 2. **Rimozione di `cleanWs()`**  
    Evita la pulizia manuale (circa 2 secondi), possibile grazie a Maven che pulisce `target` con `mvn clean`.
