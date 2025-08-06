@@ -9,15 +9,23 @@ pipeline {
         timestamps()
     }
     stages {
-        //stage 2
-        stage('Build, Test & PMD Analysis') {
+
+        stage('Build, Test, PMD & SonarQube Analysis') {
             steps {
                 ansiColor('xterm') {
-                    echo 'Starting Build, Test & PMD Analysis...'
-                    timeout(time: 20, unit: 'MINUTES') {
-                        sh 'mvn clean verify pmd:pmd'
+                    script {
+                        echo 'Starting Build, Test, PMD & SonarQube Analysis...'
+                        timeout(time: 20, unit: 'MINUTES') {
+                            retry(2) { 
+                                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                                    withSonarQubeEnv('LocalSonarQube') {
+                                        sh 'mvn clean verify pmd:pmd sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml'
+                                    }
+                                }
+                            }
+                        }
+                        echo 'Build, Test, PMD & SonarQube Analysis completed.'
                     }
-                    echo 'Build, Test & PMD Analysis completed.'
                 }
             }
         }
@@ -31,24 +39,6 @@ pipeline {
                             additionalArguments: '--format HTML --format XML --out target'
                         echo 'OWASP Dependency-Check scan completed.'
                         archiveArtifacts artifacts: 'target/dependency-check-report.html, target/dependency-check-report.xml', fingerprint: true
-                    }
-                }
-            }
-        }
-        //stage 4
-        stage('SonarQube Analysis') {
-            steps {
-                ansiColor('xterm') {
-                    script {
-                        echo 'Starting SonarQube analysis...'
-                        retry(2) {
-                            withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                                withSonarQubeEnv('LocalSonarQube') {                                
-                                   sh 'mvn sonar:sonar -Dsonar.projectKey=onlinebookstore -Dsonar.login=$SONAR_TOKEN -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml -Dsonar.java.binaries=target/classes -Dsonar.java.test.binaries=target/test-classes'
-                                }
-                            }
-                        }
-                        echo 'SonarQube analysis completed.'
                     }
                 }
             }
